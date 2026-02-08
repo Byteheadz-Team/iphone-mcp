@@ -164,47 +164,6 @@ Runs the server with `tsx watch` for automatic restarts on file changes.
 
 Unlike traditional automation frameworks, there's no `find_element` or accessibility tree. The AI uses **vision**: it takes a screenshot, sees the screen, and taps at the coordinates of what it wants to interact with. This is simpler, more robust, and matches how multimodal AI agents actually work.
 
-## Project structure
-
-```
-src/
-  lib/                          # Low-level protocol/client implementations
-    plist/                      # XML plist parser/serializer (from scratch)
-      xml-parser.ts             # Recursive descent XML plist parser
-      xml-serializer.ts         # JS values -> XML plist
-      types.ts                  # PlistValue type union
-    usbmux/                     # usbmuxd Unix socket client
-      usbmux-client.ts          # Message framing, device listing, tunneling
-      types.ts                  # Protocol types and constants
-    lockdown/                   # Apple lockdown protocol
-      lockdown-client.ts        # Device info, pairing, TLS upgrade, services
-      types.ts                  # Lockdown types
-    mirroring/                  # iPhone Mirroring window interaction
-      mirroring-client.ts       # screencapture + sips, CGEvent, AppleScript keystroke
-      mirroring.types.ts        # WindowInfo
-  services/                     # Domain services (extend Module)
-    device/                     # Device discovery and info (usbmux + lockdown)
-      device.service.ts
-      device.types.ts
-    mirroring/                  # Screenshot, tap, swipe, type, coordinate mapping
-      mirroring.service.ts
-      mirroring.types.ts        # SwipeDirection, ButtonName
-  mcp/                          # MCP protocol layer
-    server.ts                   # MCP server with stdio transport
-    tools/
-      device-tools.ts           # list_devices, device_info, get_screen_info
-      screenshot-tools.ts       # screenshot
-      screenshot-after.ts       # withScreenshotAfter() helper, screenshotDelaySchema
-      automation-tools.ts       # tap, long_press, swipe, type_text, press_button
-      mirroring-control-tools.ts # get_clipboard, set_clipboard, get_battery_info
-  container.ts                  # Dependency injection container
-  config.ts                     # Environment-based configuration
-  doctor.ts                     # Preflight environment checker
-  log.ts                        # Scoped console logger
-  types.ts                      # Base Module class
-  index.ts                      # Entry point
-```
-
 ## Scripts
 
 | Command          | Description                                  |
