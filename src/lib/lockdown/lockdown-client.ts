@@ -5,14 +5,14 @@ import {
   type PlistValue,
   parsePlist,
   serializePlist,
-} from '../plist/index.js';
+} from '../plist';
 
 import {
   type DeviceValues,
   type LockdownResponse,
   type PairRecord,
   LockdownRequestType,
-} from './types.js';
+} from './types';
 
 export class LockdownClient {
   private socket: NodeJS.ReadWriteStream;

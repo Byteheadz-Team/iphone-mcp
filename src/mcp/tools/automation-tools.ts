@@ -1,12 +1,12 @@
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 
-import { type MirroringService } from '../../services/mirroring/mirroring.service.js';
+import { type MirroringService } from '@services/mirroring/mirroring.service';
 
 import {
   screenshotDelaySchema,
   withScreenshotAfter,
-} from './screenshot-after.js';
+} from './screenshot-after';
 
 export function registerAutomationTools(
   server: McpServer,

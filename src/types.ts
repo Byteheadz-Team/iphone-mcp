@@ -1,4 +1,4 @@
-import { type Logger, createLogger } from './log.js';
+import { type Logger, createLogger } from './log';
 
 export class Module {
   started = false;

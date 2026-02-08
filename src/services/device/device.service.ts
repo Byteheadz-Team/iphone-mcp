@@ -1,16 +1,16 @@
 import { type Socket } from 'node:net';
 
-import config from '../../config.js';
-import { LockdownClient } from '../../lib/lockdown/lockdown-client.js';
-import { LOCKDOWN_PORT } from '../../lib/lockdown/types.js';
-import { UsbmuxClient } from '../../lib/usbmux/usbmux-client.js';
-import { Module } from '../../types.js';
+import { LockdownClient } from '@lib/lockdown/lockdown-client';
+import { LOCKDOWN_PORT } from '@lib/lockdown/types';
+import { UsbmuxClient } from '@lib/usbmux/usbmux-client';
+import config from '@src/config';
+import { Module } from '@src/types';
 
 import {
   type AttachedDevice,
   type BatteryInfo,
   type DeviceInfo,
-} from './device.types.js';
+} from './device.types';
 
 export class DeviceService extends Module {
   private socketPath: string;

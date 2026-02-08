@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 
-import { type WindowInfo } from './mirroring.types.js';
+import { type WindowInfo } from './mirroring.types';
 
 const execFile = promisify(execFileCb);
 

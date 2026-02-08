@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { AppContainer } from './container.js';
-import { createLogger } from './log.js';
+import { AppContainer } from './container';
+import { createLogger } from './log';
 
 const log = createLogger('main');
 const container = new AppContainer();

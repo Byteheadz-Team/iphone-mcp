@@ -5,7 +5,7 @@ import {
   type PlistValue,
   parsePlist,
   serializePlist,
-} from '../plist/index.js';
+} from '../plist';
 
 import {
   type UsbmuxDevice,
@@ -13,7 +13,7 @@ import {
   USBMUX_HEADER_SIZE,
   USBMUX_VERSION,
   UsbmuxMessageType,
-} from './types.js';
+} from './types';
 
 const PROG_NAME = 'iphone-mcp';
 const CLIENT_VERSION = '0.1.0';

@@ -1,9 +1,10 @@
-import config from './config.js';
-import { createLogger } from './log.js';
-import { McpServerModule } from './mcp/server.js';
-import { DeviceService } from './services/device/device.service.js';
-import { MirroringService } from './services/mirroring/mirroring.service.js';
-import { type Module } from './types.js';
+import { McpServerModule } from '@mcp/server';
+import { DeviceService } from '@services/device/device.service';
+import { MirroringService } from '@services/mirroring/mirroring.service';
+
+import config from './config';
+import { createLogger } from './log';
+import { type Module } from './types';
 
 export class AppContainer {
   private log = createLogger('AppContainer');

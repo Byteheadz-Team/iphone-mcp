@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { type MirroringClient } from '../../../lib/mirroring/index.js';
-import { MirroringService } from '../mirroring.service.js';
+import { type MirroringClient } from '@lib/mirroring';
+
+import { MirroringService } from '../mirroring.service';
 
 const resolved = Promise.resolve();
 

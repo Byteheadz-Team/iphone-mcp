@@ -1,2 +1,2 @@
-export { MirroringClient } from './mirroring-client.js';
-export { type WindowInfo } from './mirroring.types.js';
+export { MirroringClient } from './mirroring-client';
+export { type WindowInfo } from './mirroring.types';

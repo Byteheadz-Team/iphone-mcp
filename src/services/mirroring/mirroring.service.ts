@@ -1,11 +1,11 @@
 import { execFile as execFileCb, type ChildProcess } from 'node:child_process';
 import { promisify } from 'node:util';
 
-import config from '../../config.js';
-import { MirroringClient, type WindowInfo } from '../../lib/mirroring/index.js';
-import { Module } from '../../types.js';
+import { MirroringClient, type WindowInfo } from '@lib/mirroring';
+import config from '@src/config';
+import { Module } from '@src/types';
 
-import { type ButtonName, type SwipeDirection } from './mirroring.types.js';
+import { type ButtonName, type SwipeDirection } from './mirroring.types';
 
 const execFile = promisify(execFileCb);
 

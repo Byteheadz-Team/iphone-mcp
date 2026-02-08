@@ -1,15 +1,15 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
-import config from '../config.js';
-import { type DeviceService } from '../services/device/device.service.js';
-import { type MirroringService } from '../services/mirroring/mirroring.service.js';
-import { Module } from '../types.js';
+import { type DeviceService } from '@services/device/device.service';
+import { type MirroringService } from '@services/mirroring/mirroring.service';
+import config from '@src/config';
+import { Module } from '@src/types';
 
-import { registerAutomationTools } from './tools/automation-tools.js';
-import { registerDeviceTools } from './tools/device-tools.js';
-import { registerMirroringControlTools } from './tools/mirroring-control-tools.js';
-import { registerScreenshotTools } from './tools/screenshot-tools.js';
+import { registerAutomationTools } from './tools/automation-tools';
+import { registerDeviceTools } from './tools/device-tools';
+import { registerMirroringControlTools } from './tools/mirroring-control-tools';
+import { registerScreenshotTools } from './tools/screenshot-tools';
 
 export interface McpServerDependencies {
   deviceService: DeviceService;

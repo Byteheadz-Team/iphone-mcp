@@ -1,4 +1,4 @@
-import { type PlistValue } from '../plist/types.js';
+import { type PlistValue } from '../plist/types';
 
 export interface LockdownResponse {
   Request: string;

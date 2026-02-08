@@ -5,6 +5,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   resolve: {
     alias: {
+      '@src': resolve('src'),
       '@lib': resolve('src/lib'),
       '@services': resolve('src/services'),
       '@mcp': resolve('src/mcp'),

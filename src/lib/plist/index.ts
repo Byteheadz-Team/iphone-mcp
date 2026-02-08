@@ -1,3 +1,3 @@
-export { parsePlist } from './xml-parser.js';
-export { serializePlist } from './xml-serializer.js';
-export type { PlistValue, PlistDict } from './types.js';
+export { parsePlist } from './xml-parser';
+export { serializePlist } from './xml-serializer';
+export type { PlistValue, PlistDict } from './types';

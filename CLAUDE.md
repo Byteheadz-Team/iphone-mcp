@@ -4,7 +4,7 @@ MCP server that controls a physical iPhone via macOS iPhone Mirroring. See @READ
 
 ## Commands
 
-- `yarn build` — compile TypeScript to dist/
+- `yarn build` — bundle with tsup to dist/
 - `yarn dev` — run with tsx watch (auto-restart)
 - `yarn test` — run all tests (vitest)
 - `yarn typecheck` — type-check without emitting
@@ -16,10 +16,11 @@ Run a single test file: `yarn vitest run src/path/to/file.test.ts`
 
 ## Code style
 
-- ESM only (`import`/`export`, never `require`). All local imports use `.js` extension.
+- ESM only (`import`/`export`, never `require`). No `.js` extensions on imports.
+- Path aliases for cross-layer imports: `@src/*`, `@lib/*`, `@services/*`, `@mcp/*`. Relative imports (extensionless) for siblings/parents within the same module.
 - Strict TypeScript — `no-explicit-any` is an error. Use `unknown` and narrow.
-- `type` imports must use inline syntax: `import { type Foo } from './bar.js'`
-- Import order enforced by eslint: builtins, externals, internals, parent, sibling — with blank lines between groups, alphabetized.
+- `type` imports must use inline syntax: `import { type Foo } from '@lib/bar'`
+- Import order enforced by eslint: builtins, externals, internals (aliases), parent, sibling — with blank lines between groups, alphabetized.
 - Node built-in imports always use `node:` prefix (e.g. `node:net`, `node:tls`).
 - Single quotes, 2-space indent, trailing commas (prettier handles this).
 
@@ -30,6 +31,8 @@ Three layers — `lib/` (protocols) → `services/` (domain) → `mcp/` (tools).
 Dependencies flow one direction: mcp → services → lib. Never import upward.
 
 `src/container.ts` wires everything via constructor injection (no DI framework). Modules start in order, stop in reverse.
+
+Build uses `tsup` (esbuild) which bundles everything into a single `dist/index.js`. Path aliases from `tsconfig.json` are resolved at build time. `moduleResolution: "bundler"` allows extensionless imports.
 
 ## iPhone communication
 

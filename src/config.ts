@@ -1,4 +1,4 @@
-import pkg from '../package.json' with { type: 'json' };
+import pkg from '../package.json';
 
 type AppEnv = 'test' | 'local' | 'dev' | 'prod';
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'silent';

@@ -1,4 +1,4 @@
-import { type PlistValue } from './types.js';
+import { type PlistValue } from './types';
 
 interface ParseContext {
   xml: string;

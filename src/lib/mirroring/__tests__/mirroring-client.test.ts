@@ -3,7 +3,7 @@ import { readFile, unlink } from 'node:fs/promises';
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { MirroringClient } from '../mirroring-client.js';
+import { MirroringClient } from '../mirroring-client';
 
 vi.mock('node:child_process', () => ({
   execFile: vi.fn(),

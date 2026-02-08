@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { type MirroringService } from '../../services/mirroring/mirroring.service.js';
+import { type MirroringService } from '@services/mirroring/mirroring.service';
 
 export const screenshotDelaySchema = z
   .number()

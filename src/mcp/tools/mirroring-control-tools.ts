@@ -1,13 +1,13 @@
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 
-import { type DeviceService } from '../../services/device/device.service.js';
-import { type MirroringService } from '../../services/mirroring/mirroring.service.js';
+import { type DeviceService } from '@services/device/device.service';
+import { type MirroringService } from '@services/mirroring/mirroring.service';
 
 import {
   screenshotDelaySchema,
   withScreenshotAfter,
-} from './screenshot-after.js';
+} from './screenshot-after';
 
 export function registerMirroringControlTools(
   server: McpServer,

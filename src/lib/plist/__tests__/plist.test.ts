@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { parsePlist } from '../xml-parser.js';
-import { serializePlist } from '../xml-serializer.js';
+import { parsePlist } from '../xml-parser';
+import { serializePlist } from '../xml-serializer';
 
 describe('plist parser', () => {
   it('parses an empty dict', () => {

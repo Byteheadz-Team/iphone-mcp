@@ -60,6 +60,25 @@ export default tseslint.config(
             'sibling',
             'index',
           ],
+          pathGroups: [
+            {
+              pattern: '@src/**',
+              group: 'internal',
+            },
+            {
+              pattern: '@lib/**',
+              group: 'internal',
+            },
+            {
+              pattern: '@services/**',
+              group: 'internal',
+            },
+            {
+              pattern: '@mcp/**',
+              group: 'internal',
+            },
+          ],
+          pathGroupsExcludedImportTypes: ['builtin'],
           'newlines-between': 'always',
           alphabetize: { order: 'asc', caseInsensitive: true },
         },

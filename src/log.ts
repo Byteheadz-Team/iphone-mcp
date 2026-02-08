@@ -1,4 +1,4 @@
-import config, { type LogLevel } from './config.js';
+import config, { type LogLevel } from './config';
 
 export interface Logger {
   info: (...args: unknown[]) => void;
