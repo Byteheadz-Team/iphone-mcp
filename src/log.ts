@@ -30,11 +30,11 @@ export function createLogger(scope: string): Logger {
   return {
     debug:
       level <= LOG_LEVELS.debug
-        ? (...args: unknown[]) => console.debug(`[${scope}]`, ...args)
+        ? (...args: unknown[]) => console.error(`[${scope}]`, ...args)
         : noop,
     info:
       level <= LOG_LEVELS.info
-        ? (...args: unknown[]) => console.info(`[${scope}]`, ...args)
+        ? (...args: unknown[]) => console.error(`[${scope}]`, ...args)
         : noop,
     warn:
       level <= LOG_LEVELS.warn

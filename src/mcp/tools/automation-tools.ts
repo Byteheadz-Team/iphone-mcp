@@ -9,40 +9,39 @@ export function registerAutomationTools(
 ): void {
   server.tool(
     'tap',
-    'Tap on the screen at coordinates or on an element by accessibility ID',
+    'Tap on the screen at the given coordinates',
     {
-      x: z.number().optional().describe('X coordinate to tap'),
-      y: z.number().optional().describe('Y coordinate to tap'),
-      element: z
-        .string()
-        .optional()
-        .describe('Accessibility ID of the element to tap'),
+      x: z.number().describe('X coordinate to tap (in screenshot pixels)'),
+      y: z.number().describe('Y coordinate to tap (in screenshot pixels)'),
     },
-    async ({ x, y, element }) => {
-      if (element) {
-        await automationService.tapElement(element);
-        return {
-          content: [
-            { type: 'text', text: `Tapped element: ${element}` },
-          ],
-        };
-      }
+    async ({ x, y }) => {
+      await automationService.tapCoordinates(x, y);
+      return {
+        content: [{ type: 'text', text: `Tapped at (${x}, ${y})` }],
+      };
+    },
+  );
 
-      if (x !== undefined && y !== undefined) {
-        await automationService.tapCoordinates(x, y);
-        return {
-          content: [{ type: 'text', text: `Tapped at (${x}, ${y})` }],
-        };
-      }
-
+  server.tool(
+    'long_press',
+    'Press and hold at the given coordinates for a duration',
+    {
+      x: z.number().describe('X coordinate (in screenshot pixels)'),
+      y: z.number().describe('Y coordinate (in screenshot pixels)'),
+      duration: z
+        .number()
+        .describe('Hold duration in seconds (e.g. 2 for two seconds)'),
+    },
+    async ({ x, y, duration }) => {
+      const durationMs = Math.round(duration * 1000);
+      await automationService.longPress(x, y, durationMs);
       return {
         content: [
           {
             type: 'text',
-            text: 'Error: provide either (x, y) coordinates or an element accessibility ID',
+            text: `Long pressed at (${x}, ${y}) for ${duration}s`,
           },
         ],
-        isError: true,
       };
     },
   );
@@ -62,7 +61,7 @@ export function registerAutomationTools(
       duration: z
         .number()
         .optional()
-        .describe('Swipe duration in seconds (default: 0.5)'),
+        .describe('Swipe duration in milliseconds (default: 500)'),
     },
     async ({ direction, startX, startY, endX, endY, duration }) => {
       if (direction) {
@@ -116,16 +115,14 @@ export function registerAutomationTools(
     async ({ text }) => {
       await automationService.typeText(text);
       return {
-        content: [
-          { type: 'text', text: `Typed: "${text}"` },
-        ],
+        content: [{ type: 'text', text: `Typed: "${text}"` }],
       };
     },
   );
 
   server.tool(
     'press_button',
-    'Press a physical button on the device',
+    'Press a button on the device. Only "home" is supported (simulated via swipe-up gesture). Volume buttons are not available via iPhone Mirroring.',
     {
       button: z
         .enum(['home', 'volumeUp', 'volumeDown'])
@@ -134,46 +131,7 @@ export function registerAutomationTools(
     async ({ button }) => {
       await automationService.pressButton(button);
       return {
-        content: [
-          { type: 'text', text: `Pressed button: ${button}` },
-        ],
-      };
-    },
-  );
-
-  server.tool(
-    'find_element',
-    'Find a UI element on screen using a search strategy',
-    {
-      using: z
-        .enum([
-          'accessibility id',
-          'class name',
-          'xpath',
-          'predicate string',
-          'class chain',
-          '-ios predicate string',
-          '-ios class chain',
-        ])
-        .describe('Search strategy'),
-      value: z.string().describe('Value to search for'),
-    },
-    async ({ using, value }) => {
-      const element = await automationService.findElement(using, value);
-      return {
-        content: [{ type: 'text', text: JSON.stringify(element, null, 2) }],
-      };
-    },
-  );
-
-  server.tool(
-    'get_page_source',
-    'Get the current UI element tree (accessibility hierarchy)',
-    {},
-    async () => {
-      const source = await automationService.getPageSource();
-      return {
-        content: [{ type: 'text', text: source }],
+        content: [{ type: 'text', text: `Pressed button: ${button}` }],
       };
     },
   );

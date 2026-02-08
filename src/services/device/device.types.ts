@@ -17,3 +17,8 @@ export interface AttachedDevice {
   udid: string;
   connectionType: string;
 }
+
+export interface BatteryInfo {
+  level: number;
+  state: 'charging' | 'unplugged' | 'unknown';
+}

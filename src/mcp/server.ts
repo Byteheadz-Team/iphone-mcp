@@ -1,25 +1,22 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
-import { type AppService } from '../services/app/app.service.js';
 import { type AutomationService } from '../services/automation/automation.service.js';
 import { type DeviceService } from '../services/device/device.service.js';
+import { type MirroringService } from '../services/mirroring/mirroring.service.js';
 import { type ScreenshotService } from '../services/screenshot/screenshot.service.js';
-import { type WdaClient } from '../services/wda/wda-client.js';
 import { Module } from '../types.js';
 
-import { registerAppTools } from './tools/app-tools.js';
 import { registerAutomationTools } from './tools/automation-tools.js';
-import { registerDeviceControlTools } from './tools/device-control-tools.js';
 import { registerDeviceTools } from './tools/device-tools.js';
+import { registerMirroringControlTools } from './tools/mirroring-control-tools.js';
 import { registerScreenshotTools } from './tools/screenshot-tools.js';
 
 export interface McpServerDependencies {
   deviceService: DeviceService;
-  wdaClient: WdaClient;
+  mirroringService: MirroringService;
   screenshotService: ScreenshotService;
   automationService: AutomationService;
-  appService: AppService;
 }
 
 export class McpServerModule extends Module {
@@ -39,12 +36,15 @@ export class McpServerModule extends Module {
     registerDeviceTools(
       this.server,
       this.deps.deviceService,
-      this.deps.wdaClient,
+      this.deps.mirroringService,
     );
     registerScreenshotTools(this.server, this.deps.screenshotService);
     registerAutomationTools(this.server, this.deps.automationService);
-    registerAppTools(this.server, this.deps.appService);
-    registerDeviceControlTools(this.server, this.deps.wdaClient);
+    registerMirroringControlTools(
+      this.server,
+      this.deps.mirroringService,
+      this.deps.deviceService,
+    );
   }
 
   override async start(): Promise<void> {

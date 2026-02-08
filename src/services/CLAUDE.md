@@ -4,16 +4,20 @@ All services extend `Module` (from `src/types.ts`) and receive dependencies via 
 
 ## device/
 
-Uses `UsbmuxClient` to list attached devices and `LockdownClient` to fetch device info (model, OS version, etc.). Creates fresh usbmux/lockdown connections per call and closes them in `finally` blocks.
+Uses `UsbmuxClient` to list attached devices and `LockdownClient` to fetch device info (model, OS version, etc.) and battery status. Creates fresh usbmux/lockdown connections per call and closes them in `finally` blocks.
 
-## wda/
+## mirroring/
 
-`WdaClient` talks to WebDriverAgent over HTTP using native `fetch()`. It can create a local TCP proxy (`net.createServer`) that tunnels connections through usbmux to device port 8100 — this lets `fetch()` hit `http://127.0.0.1:<proxyPort>` without needing Wi-Fi.
+`MirroringService` wraps `MirroringClient` (from `lib/mirroring/`) with `Module` lifecycle and coordinate mapping. On `start()`, it checks accessibility permissions, launches iPhone Mirroring, and caches window info.
 
-Most WDA methods require an active session — call `createSession()` first. Methods that don't need a session: `getStatus()`, `takeScreenshot()`.
+Key responsibility: **coordinate mapping**. Screenshots are captured at 1x (nominal resolution), so screenshot pixels = macOS screen points. Mapping is simply `screen_x = window.x + pixel_x`. The AI sends coordinates in screenshot pixels; the service translates them to macOS screen coordinates for CGEvent injection.
 
-The WDA HTTP API follows WebDriver/W3C conventions: elements are identified by opaque IDs returned in the `ELEMENT` or `element-6066-11e4-a52e-4f735466cecf` field.
+Also provides clipboard via `pbpaste`/`pbcopy` (Universal Clipboard) and home button simulation via swipe-up gesture.
 
-## screenshot/, automation/, app/
+## screenshot/
 
-Thin wrappers around `WdaClient` that add logging and ergonomic method signatures. They don't hold state beyond what `WdaClient` provides.
+Thin wrapper around `MirroringService.takeScreenshot()` that adds logging and returns `{ data: Buffer, format: 'png' }`.
+
+## automation/
+
+Thin wrapper around `MirroringService` for tap, swipe, type, and button press. Delegates all coordinate math and input injection to `MirroringService`.

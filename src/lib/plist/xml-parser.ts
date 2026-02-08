@@ -129,7 +129,9 @@ function parseValue(ctx: ParseContext): PlistValue | undefined {
       return selfClosing ? '' : readTextContent(ctx, 'string');
 
     case 'integer':
-      return selfClosing ? 0 : Number.parseInt(readTextContent(ctx, 'integer'), 10);
+      return selfClosing
+        ? 0
+        : Number.parseInt(readTextContent(ctx, 'integer'), 10);
 
     case 'real':
       return selfClosing ? 0 : Number.parseFloat(readTextContent(ctx, 'real'));

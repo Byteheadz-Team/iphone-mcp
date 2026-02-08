@@ -4,7 +4,11 @@ import { LOCKDOWN_PORT } from '../../lib/lockdown/types.js';
 import { UsbmuxClient } from '../../lib/usbmux/usbmux-client.js';
 import { Module } from '../../types.js';
 
-import { type AttachedDevice, type DeviceInfo } from './device.types.js';
+import {
+  type AttachedDevice,
+  type BatteryInfo,
+  type DeviceInfo,
+} from './device.types.js';
 
 export class DeviceService extends Module {
   private socketPath: string;
@@ -76,5 +80,47 @@ export class DeviceService extends Module {
       throw new Error('No devices connected');
     }
     return first;
+  }
+
+  async getBatteryInfo(udid?: string): Promise<BatteryInfo> {
+    let targetUdid = udid;
+    if (!targetUdid) {
+      const device = await this.getActiveDevice();
+      targetUdid = device.udid;
+    }
+
+    const devices = await this.listDevices();
+    const device = devices.find((d) => d.udid === targetUdid);
+    if (!device) {
+      throw new Error(`Device not found: ${targetUdid}`);
+    }
+
+    const usbmuxClient = new UsbmuxClient(this.socketPath);
+    try {
+      await usbmuxClient.connect();
+      const socket = await usbmuxClient.connectToDevice(
+        device.deviceId,
+        LOCKDOWN_PORT,
+      );
+
+      const lockdown = new LockdownClient(socket);
+      try {
+        const value = await lockdown.getValue('com.apple.mobile.battery');
+
+        const battery = value as Record<string, unknown>;
+        return {
+          level: Math.round(
+            (battery.BatteryCurrentCapacity as number | undefined) ?? 0,
+          ),
+          state: (battery.BatteryIsCharging as boolean | undefined)
+            ? 'charging'
+            : 'unplugged',
+        };
+      } finally {
+        lockdown.close();
+      }
+    } finally {
+      usbmuxClient.close();
+    }
   }
 }

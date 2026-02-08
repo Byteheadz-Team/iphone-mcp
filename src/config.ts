@@ -37,9 +37,9 @@ const config = {
   usbmux: {
     socketPath: process.env.USBMUX_SOCKET_PATH ?? '/var/run/usbmuxd',
   },
-  wda: {
-    port: Number(process.env.WDA_PORT ?? 8100),
-    defaultTimeout: 30_000,
+  mirroring: {
+    appName: 'iPhone Mirroring',
+    launchTimeoutMs: 10_000,
   },
 } as const;
 

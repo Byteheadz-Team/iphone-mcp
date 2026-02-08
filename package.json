@@ -17,7 +17,8 @@
     "lint": "eslint --cache .",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
-    "check": "prettier --write . && eslint --cache --fix . && tsc --noEmit"
+    "check": "prettier --write . && eslint --cache --fix . && tsc --noEmit",
+    "doctor": "tsx src/doctor.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0",

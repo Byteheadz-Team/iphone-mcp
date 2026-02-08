@@ -19,6 +19,8 @@ describe('DeviceService', () => {
 
   it('throws when stopping before starting', () => {
     const service = new DeviceService('/nonexistent');
-    expect(() => service.stop()).toThrow('cannot stop a module that is not started');
+    expect(() => service.stop()).toThrow(
+      'cannot stop a module that is not started',
+    );
   });
 });

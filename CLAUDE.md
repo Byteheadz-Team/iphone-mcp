@@ -1,6 +1,6 @@
 # iphone-mcp
 
-MCP server that controls a physical iPhone via USB. See @README.md for full project overview.
+MCP server that controls a physical iPhone via macOS iPhone Mirroring. See @README.md for full project overview.
 
 ## Commands
 
@@ -10,6 +10,7 @@ MCP server that controls a physical iPhone via USB. See @README.md for full proj
 - `yarn typecheck` — type-check without emitting
 - `yarn lint` — eslint with cache
 - `yarn check` — format + lint fix + typecheck (run before committing)
+- `yarn doctor` — preflight check (macOS version, permissions, device detection)
 
 Run a single test file: `yarn vitest run src/path/to/file.test.ts`
 
@@ -32,21 +33,24 @@ Dependencies flow one direction: mcp → services → lib. Never import upward.
 
 ## iPhone communication
 
-IMPORTANT: Zero npm dependencies for iPhone protocols. Everything uses Node built-ins (`node:net`, `node:tls`, `node:buffer`).
+Two channels to the iPhone:
 
-- **usbmuxd**: Unix socket at `/var/run/usbmuxd`. 16-byte LE header + XML plist payload. Port numbers sent in network byte order (byte-swapped).
-- **lockdown**: Connects via usbmux to device port 62078. 4-byte BE length prefix + XML plist. TLS upgrade uses pairing certificates.
-- **WDA**: HTTP over a TCP proxy tunneled through usbmux to device port 8100. Uses native `fetch()`.
+- **usbmuxd + lockdown** (device info, battery): Zero npm dependencies. Uses Node built-ins (`node:net`, `node:tls`, `node:buffer`). Unix socket at `/var/run/usbmuxd`. 16-byte LE header + XML plist. Lockdown on device port 62078: 4-byte BE length + XML plist. TLS upgrade uses pairing certificates.
+- **iPhone Mirroring** (UI automation): macOS Sequoia's `com.apple.ScreenContinuity` mirrors the iPhone screen to a macOS window. The server takes screenshots via `screencapture` (downscaled to 1x via `sips`), injects clicks/drags via `CGEvent` (JXA/osascript), and types via AppleScript `keystroke`. The window is activated before each input event. Zero setup beyond what Apple provides.
 
 ## Testing
 
 - Tests live next to source in `__tests__/` directories.
-- Mock WDA/usbmux clients with plain objects + `vi.fn()` — avoid `mockResolvedValue(undefined)` (triggers `unicorn/no-useless-undefined`). Use `vi.fn().mockReturnValue(Promise.resolve())` instead.
-- Mock objects should be typed via `as unknown as WdaClient` pattern to avoid `@typescript-eslint/unbound-method` on mock assertions.
-- No real device needed for unit tests. Integration tests require iPhone + WDA running.
+- Mock `MirroringClient`/`MirroringService` with plain objects + `vi.fn()` — avoid `mockResolvedValue(undefined)` (triggers `unicorn/no-useless-undefined`). Use `vi.fn().mockReturnValue(Promise.resolve())` instead.
+- Mock objects should be typed via `as unknown as MirroringClient` pattern to avoid `@typescript-eslint/unbound-method` on mock assertions.
+- Use `beforeEach(() => vi.clearAllMocks())` when mocking `node:child_process` to prevent call count accumulation across tests.
+- No real device needed for unit tests.
 
 ## Common gotchas
 
 - `Module.start()` and `Module.stop()` return `Promise<void> | void` — always `await` them to avoid `@typescript-eslint/no-floating-promises`.
 - Plist `PlistDict` values are `PlistValue`, not `PlistValue | undefined` — interfaces extending it can't have optional properties of plist types.
 - usbmuxd port encoding is byte-swapped: `((port & 0xff) << 8) | ((port >> 8) & 0xff)`.
+- Coordinate mapping: screenshots are captured at native resolution then downscaled to 1x via `sips`, so screenshot pixels = macOS screen points. Mapping is simply `screen_x = window.x + pixel_x`. The `MirroringService.toScreenCoords()` method handles this.
+- The screenshot output includes the window title bar. Coordinates the AI provides from the screenshot already account for it.
+- `MirroringClient` activates the iPhone Mirroring window before every input event (click, drag, type). Without this, `CGEvent` posts may be silently ignored if the window isn't frontmost.

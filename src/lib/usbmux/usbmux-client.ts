@@ -1,6 +1,11 @@
 import * as net from 'node:net';
 
-import { type PlistDict, type PlistValue, parsePlist, serializePlist } from '../plist/index.js';
+import {
+  type PlistDict,
+  type PlistValue,
+  parsePlist,
+  serializePlist,
+} from '../plist/index.js';
 
 import {
   type UsbmuxDevice,
@@ -78,9 +83,7 @@ export class UsbmuxClient {
         messageType === UsbmuxMessageType.Detached
       ) {
         this.listenCallback?.(
-          messageType === UsbmuxMessageType.Attached
-            ? 'attached'
-            : 'detached',
+          messageType === UsbmuxMessageType.Attached ? 'attached' : 'detached',
           response as unknown as UsbmuxDevice,
         );
         continue;
@@ -136,10 +139,7 @@ export class UsbmuxClient {
   }
 
   async listen(
-    callback: (
-      event: 'attached' | 'detached',
-      device: UsbmuxDevice,
-    ) => void,
+    callback: (event: 'attached' | 'detached', device: UsbmuxDevice) => void,
   ): Promise<void> {
     this.listenCallback = callback;
     const response = await this.sendAndReceive({
@@ -150,10 +150,7 @@ export class UsbmuxClient {
     }
   }
 
-  async connectToDevice(
-    deviceId: number,
-    port: number,
-  ): Promise<net.Socket> {
+  async connectToDevice(deviceId: number, port: number): Promise<net.Socket> {
     // usbmuxd expects port in network byte order (big-endian)
     const portBE = ((port & 0xff) << 8) | ((port >> 8) & 0xff);
 

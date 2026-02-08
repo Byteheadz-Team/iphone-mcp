@@ -1,6 +1,11 @@
 import * as tls from 'node:tls';
 
-import { type PlistDict, type PlistValue, parsePlist, serializePlist } from '../plist/index.js';
+import {
+  type PlistDict,
+  type PlistValue,
+  parsePlist,
+  serializePlist,
+} from '../plist/index.js';
 
 import {
   type DeviceValues,
@@ -48,7 +53,9 @@ export class LockdownClient {
     }
   }
 
-  private sendRequest(request: Record<string, PlistValue>): Promise<LockdownResponse> {
+  private sendRequest(
+    request: Record<string, PlistValue>,
+  ): Promise<LockdownResponse> {
     return new Promise((resolve, reject) => {
       this.responseQueue.push({ resolve, reject });
 
@@ -168,12 +175,15 @@ export class LockdownClient {
     });
 
     if (response.Error) {
-      throw new Error(`StartService "${serviceName}" failed: ${response.Error}`);
+      throw new Error(
+        `StartService "${serviceName}" failed: ${response.Error}`,
+      );
     }
 
     return {
       port: response.Port as number,
-      enableServiceSSL: (response.EnableServiceSSL as boolean | undefined) ?? false,
+      enableServiceSSL:
+        (response.EnableServiceSSL as boolean | undefined) ?? false,
     };
   }
 
