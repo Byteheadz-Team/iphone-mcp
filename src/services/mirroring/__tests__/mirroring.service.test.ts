@@ -19,7 +19,6 @@ function createMockClient() {
     postClick: vi.fn().mockReturnValue(resolved),
     postDrag: vi.fn().mockReturnValue(resolved),
     typeText: vi.fn().mockReturnValue(resolved),
-    typeSpecialKey: vi.fn().mockReturnValue(resolved),
     sendShortcut: vi.fn().mockReturnValue(resolved),
     checkAccessibilityPermission: vi.fn().mockResolvedValue(true),
   };

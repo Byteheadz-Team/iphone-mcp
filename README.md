@@ -181,24 +181,20 @@ src/
       types.ts                  # Lockdown types
     mirroring/                  # iPhone Mirroring window interaction
       mirroring-client.ts       # screencapture + sips, CGEvent, AppleScript keystroke
-      mirroring.types.ts        # WindowInfo, ContentBounds
+      mirroring.types.ts        # WindowInfo
   services/                     # Domain services (extend Module)
     device/                     # Device discovery and info (usbmux + lockdown)
       device.service.ts
       device.types.ts
-    mirroring/                  # iPhone Mirroring coordination + coordinate mapping
+    mirroring/                  # Screenshot, tap, swipe, type, coordinate mapping
       mirroring.service.ts
-    screenshot/                 # Screenshot capture
-      screenshot.service.ts
-    automation/                 # UI automation (tap, swipe, type)
-      automation.service.ts
-      automation.types.ts
+      mirroring.types.ts        # SwipeDirection, ButtonName
   mcp/                          # MCP protocol layer
     server.ts                   # MCP server with stdio transport
     tools/
       device-tools.ts           # list_devices, device_info, get_screen_info
       screenshot-tools.ts       # screenshot
-      automation-tools.ts       # tap, swipe, type_text, press_button
+      automation-tools.ts       # tap, long_press, swipe, type_text, press_button
       mirroring-control-tools.ts # get_clipboard, set_clipboard, get_battery_info
   container.ts                  # Dependency injection container
   config.ts                     # Environment-based configuration

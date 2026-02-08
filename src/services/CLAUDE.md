@@ -4,7 +4,7 @@ All services extend `Module` (from `src/types.ts`) and receive dependencies via 
 
 ## device/
 
-Uses `UsbmuxClient` to list attached devices and `LockdownClient` to fetch device info (model, OS version, etc.) and battery status. Creates fresh usbmux/lockdown connections per call and closes them in `finally` blocks.
+Uses `UsbmuxClient` to list attached devices and `LockdownClient` to fetch device info (model, OS version, etc.) and battery status. The `withLockdownClient(udid, fn)` helper handles the usbmux→lockdown connection lifecycle so callers only provide the lockdown operation.
 
 ## mirroring/
 
@@ -12,12 +12,6 @@ Uses `UsbmuxClient` to list attached devices and `LockdownClient` to fetch devic
 
 Key responsibility: **coordinate mapping**. Screenshots are captured at 1x (nominal resolution), so screenshot pixels = macOS screen points. Mapping is simply `screen_x = window.x + pixel_x`. The AI sends coordinates in screenshot pixels; the service translates them to macOS screen coordinates for CGEvent injection.
 
-Also provides clipboard via `pbpaste`/`pbcopy` (Universal Clipboard) and home button simulation via swipe-up gesture.
+Also provides clipboard via `pbpaste`/`pbcopy` (Universal Clipboard) and home button simulation via ⌘1 shortcut.
 
-## screenshot/
-
-Thin wrapper around `MirroringService.takeScreenshot()` that adds logging and returns `{ data: Buffer, format: 'png' }`.
-
-## automation/
-
-Thin wrapper around `MirroringService` for tap, swipe, type, and button press. Delegates all coordinate math and input injection to `MirroringService`.
+The MCP tool layer calls `MirroringService` directly for screenshots, tap, swipe, type, and button press — there are no intermediate wrapper services.

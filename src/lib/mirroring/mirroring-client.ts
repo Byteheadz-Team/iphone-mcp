@@ -226,18 +226,6 @@ end tell
     await execFile('osascript', ['-e', keystrokeScript]);
   }
 
-  async typeSpecialKey(keyCode: number): Promise<void> {
-    await this.activate();
-
-    const keyScript = `
-tell application "System Events"
-  key code ${keyCode}
-end tell
-`;
-
-    await execFile('osascript', ['-e', keyScript]);
-  }
-
   async checkAccessibilityPermission(): Promise<boolean> {
     const script = `
 ObjC.import('Cocoa');

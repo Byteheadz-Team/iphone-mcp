@@ -1,11 +1,11 @@
+import config, { type LogLevel } from './config.js';
+
 export interface Logger {
   info: (...args: unknown[]) => void;
   warn: (...args: unknown[]) => void;
   error: (...args: unknown[]) => void;
   debug: (...args: unknown[]) => void;
 }
-
-type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'silent';
 
 const LOG_LEVELS: Record<LogLevel, number> = {
   debug: 0,
@@ -15,18 +15,14 @@ const LOG_LEVELS: Record<LogLevel, number> = {
   silent: 4,
 };
 
-function getLogLevel(): number {
-  const level = (process.env.LOG_LEVEL ?? 'info') as LogLevel;
-  return LOG_LEVELS[level] ?? LOG_LEVELS.info;
-}
-
 function noop(): void {
   // intentionally empty
 }
 
 export function createLogger(scope: string): Logger {
-  const level = getLogLevel();
+  const level = LOG_LEVELS[config.logging.level];
 
+  // All log output goes to stderr — stdout is reserved for MCP protocol (stdio transport).
   return {
     debug:
       level <= LOG_LEVELS.debug
@@ -38,7 +34,7 @@ export function createLogger(scope: string): Logger {
         : noop,
     warn:
       level <= LOG_LEVELS.warn
-        ? (...args: unknown[]) => console.warn(`[${scope}]`, ...args)
+        ? (...args: unknown[]) => console.error(`[${scope}]`, ...args)
         : noop,
     error:
       level <= LOG_LEVELS.error

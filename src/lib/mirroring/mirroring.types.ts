@@ -5,10 +5,3 @@ export interface WindowInfo {
   height: number;
   windowId: number;
 }
-
-export interface ContentBounds {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}

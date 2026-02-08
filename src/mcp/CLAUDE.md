@@ -4,7 +4,7 @@
 
 Creates an `McpServer` from `@modelcontextprotocol/sdk` with `StdioServerTransport`. Tool registration happens in the constructor — each tool file exports a `register*Tools()` function that takes the server and relevant service dependencies.
 
-Dependencies: `DeviceService`, `MirroringService`, `ScreenshotService`, `AutomationService`.
+Dependencies: `DeviceService`, `MirroringService`.
 
 ## tools/
 
@@ -16,7 +16,7 @@ Files:
 
 - `device-tools.ts` — `list_devices`, `device_info`, `get_screen_info`
 - `screenshot-tools.ts` — `screenshot`
-- `automation-tools.ts` — `tap`, `swipe`, `type_text`, `press_button`
+- `automation-tools.ts` — `tap`, `long_press`, `swipe`, `type_text`, `press_button`
 - `mirroring-control-tools.ts` — `get_clipboard`, `set_clipboard`, `get_battery_info`
 
 When adding a new tool:

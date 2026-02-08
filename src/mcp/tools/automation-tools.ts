@@ -1,11 +1,11 @@
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 
-import { type AutomationService } from '../../services/automation/automation.service.js';
+import { type MirroringService } from '../../services/mirroring/mirroring.service.js';
 
 export function registerAutomationTools(
   server: McpServer,
-  automationService: AutomationService,
+  mirroringService: MirroringService,
 ): void {
   server.tool(
     'tap',
@@ -15,7 +15,7 @@ export function registerAutomationTools(
       y: z.number().describe('Y coordinate to tap (in screenshot pixels)'),
     },
     async ({ x, y }) => {
-      await automationService.tapCoordinates(x, y);
+      await mirroringService.tap(x, y);
       return {
         content: [{ type: 'text', text: `Tapped at (${x}, ${y})` }],
       };
@@ -34,7 +34,7 @@ export function registerAutomationTools(
     },
     async ({ x, y, duration }) => {
       const durationMs = Math.round(duration * 1000);
-      await automationService.longPress(x, y, durationMs);
+      await mirroringService.longPress(x, y, durationMs);
       return {
         content: [
           {
@@ -65,7 +65,7 @@ export function registerAutomationTools(
     },
     async ({ direction, startX, startY, endX, endY, duration }) => {
       if (direction) {
-        await automationService.swipeDirection(direction, startX, startY);
+        await mirroringService.swipeDirection(direction, startX, startY);
         return {
           content: [{ type: 'text', text: `Swiped ${direction}` }],
         };
@@ -77,13 +77,7 @@ export function registerAutomationTools(
         endX !== undefined &&
         endY !== undefined
       ) {
-        await automationService.swipeCoordinates(
-          startX,
-          startY,
-          endX,
-          endY,
-          duration,
-        );
+        await mirroringService.swipe(startX, startY, endX, endY, duration);
         return {
           content: [
             {
@@ -98,7 +92,7 @@ export function registerAutomationTools(
         content: [
           {
             type: 'text',
-            text: 'Error: provide either a direction or start/end coordinates',
+            text: 'Provide either a direction or start/end coordinates',
           },
         ],
         isError: true,
@@ -113,7 +107,7 @@ export function registerAutomationTools(
       text: z.string().describe('Text to type'),
     },
     async ({ text }) => {
-      await automationService.typeText(text);
+      await mirroringService.typeText(text);
       return {
         content: [{ type: 'text', text: `Typed: "${text}"` }],
       };
@@ -129,7 +123,7 @@ export function registerAutomationTools(
         .describe('Button to press'),
     },
     async ({ button }) => {
-      await automationService.pressButton(button);
+      await mirroringService.pressButton(button);
       return {
         content: [{ type: 'text', text: `Pressed button: ${button}` }],
       };

@@ -1,19 +1,14 @@
 import { execFile as execFileCb, type ChildProcess } from 'node:child_process';
 import { promisify } from 'node:util';
 
-import {
-  MirroringClient,
-  type ContentBounds,
-  type WindowInfo,
-} from '../../lib/mirroring/index.js';
+import { MirroringClient, type WindowInfo } from '../../lib/mirroring/index.js';
 import { Module } from '../../types.js';
-import {
-  type ButtonName,
-  type SwipeDirection,
-} from '../automation/automation.types.js';
+
+import { type ButtonName, type SwipeDirection } from './mirroring.types.js';
 
 const execFile = promisify(execFileCb);
 
+// Distance in screenshot pixels for directional swipes (roughly half the screen on most iPhones).
 const SWIPE_OFFSET = 200;
 
 export interface ScreenInfo {
@@ -25,7 +20,6 @@ export interface ScreenInfo {
 export class MirroringService extends Module {
   private client: MirroringClient;
   private windowInfo: WindowInfo | null = null;
-  private contentBounds: ContentBounds | null = null;
 
   constructor(client?: MirroringClient) {
     super();
@@ -44,12 +38,6 @@ export class MirroringService extends Module {
     try {
       await this.client.ensureRunning();
       this.windowInfo = await this.client.getWindowInfo();
-      this.contentBounds = {
-        x: 0,
-        y: 0,
-        width: this.windowInfo.width,
-        height: this.windowInfo.height,
-      };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       this.log.warn(
@@ -68,17 +56,10 @@ export class MirroringService extends Module {
 
     await this.client.ensureRunning();
     this.windowInfo = await this.client.getWindowInfo();
-    this.contentBounds = {
-      x: 0,
-      y: 0,
-      width: this.windowInfo.width,
-      height: this.windowInfo.height,
-    };
   }
 
   override async stop(): Promise<void> {
     this.windowInfo = null;
-    this.contentBounds = null;
     await super.stop();
   }
 
@@ -89,14 +70,14 @@ export class MirroringService extends Module {
 
   async tap(x: number, y: number): Promise<void> {
     const info = await this.refreshWindowInfo();
-    const screenCoords = this.toScreenCoords(info, x, y);
-    await this.client.postClick(screenCoords.x, screenCoords.y);
+    const screen = this.toScreenCoords(info, x, y);
+    await this.client.postClick(screen.x, screen.y);
   }
 
   async longPress(x: number, y: number, durationMs: number): Promise<void> {
     const info = await this.refreshWindowInfo();
-    const screenCoords = this.toScreenCoords(info, x, y);
-    await this.client.postLongPress(screenCoords.x, screenCoords.y, durationMs);
+    const screen = this.toScreenCoords(info, x, y);
+    await this.client.postLongPress(screen.x, screen.y, durationMs);
   }
 
   async swipe(
@@ -118,30 +99,29 @@ export class MirroringService extends Module {
     startY?: number,
   ): Promise<void> {
     const info = await this.refreshWindowInfo();
-    const bounds = this.getContentBounds(info);
 
-    const centerPixelX = startX ?? bounds.width / 2;
-    const centerPixelY = startY ?? bounds.height / 2;
+    const centerX = startX ?? info.width / 2;
+    const centerY = startY ?? info.height / 2;
 
-    let endPixelX = centerPixelX;
-    let endPixelY = centerPixelY;
+    let endX = centerX;
+    let endY = centerY;
 
     switch (direction) {
       case 'up':
-        endPixelY = centerPixelY - SWIPE_OFFSET;
+        endY = centerY - SWIPE_OFFSET;
         break;
       case 'down':
-        endPixelY = centerPixelY + SWIPE_OFFSET;
+        endY = centerY + SWIPE_OFFSET;
         break;
       case 'left':
-        endPixelX = centerPixelX - SWIPE_OFFSET;
+        endX = centerX - SWIPE_OFFSET;
         break;
       case 'right':
-        endPixelX = centerPixelX + SWIPE_OFFSET;
+        endX = centerX + SWIPE_OFFSET;
         break;
     }
 
-    await this.swipe(centerPixelX, centerPixelY, endPixelX, endPixelY, 500);
+    await this.swipe(centerX, centerY, endX, endY, 500);
   }
 
   async typeText(text: string): Promise<void> {
@@ -161,12 +141,12 @@ export class MirroringService extends Module {
 
   async getScreenInfo(): Promise<ScreenInfo> {
     await this.ensureReady();
-    if (!this.contentBounds) {
+    if (!this.windowInfo) {
       throw new Error('iPhone Mirroring window not available');
     }
     return {
-      width: this.contentBounds.width,
-      height: this.contentBounds.height,
+      width: this.windowInfo.width,
+      height: this.windowInfo.height,
       scale: 1,
     };
   }
@@ -193,22 +173,7 @@ export class MirroringService extends Module {
   private async refreshWindowInfo(): Promise<WindowInfo> {
     await this.ensureReady();
     this.windowInfo = await this.client.getWindowInfo();
-    this.contentBounds = {
-      x: 0,
-      y: 0,
-      width: this.windowInfo.width,
-      height: this.windowInfo.height,
-    };
     return this.windowInfo;
-  }
-
-  private getContentBounds(info: WindowInfo): ContentBounds {
-    return {
-      x: 0,
-      y: 0,
-      width: info.width,
-      height: info.height,
-    };
   }
 
   private toScreenCoords(

@@ -31,7 +31,7 @@ Stateless client for interacting with the macOS iPhone Mirroring window. Uses `c
 - `open -a "iPhone Mirroring"` to launch the app
 - `osascript -l JavaScript` (JXA) to query window position/size via System Events, post mouse events via `CGEvent`, and check accessibility with `AXIsProcessTrusted()`
 - `screencapture -l <windowId>` to capture the window as PNG, then `sips --resampleWidth` to downscale to 1x (nominal resolution)
-- `osascript` (AppleScript) to activate the iPhone Mirroring window, type text via `keystroke`, and special keys via `key code`
+- `osascript` (AppleScript) to activate the iPhone Mirroring window and type text via `keystroke`
 
 The window is activated before every input event (click, drag, type) to ensure `CGEvent` posts are received by the correct window.
 

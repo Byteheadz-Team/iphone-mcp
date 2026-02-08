@@ -1,5 +1,5 @@
 type AppEnv = 'test' | 'local' | 'dev' | 'prod';
-type LogLevel = 'debug' | 'info' | 'warn' | 'silent';
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'silent';
 
 function getEnv(): AppEnv {
   const env = process.env.APP_ENV ?? process.env.NODE_ENV;
@@ -15,6 +15,7 @@ function getLogLevel(): LogLevel {
     level === 'debug' ||
     level === 'info' ||
     level === 'warn' ||
+    level === 'error' ||
     level === 'silent'
   ) {
     return level;
