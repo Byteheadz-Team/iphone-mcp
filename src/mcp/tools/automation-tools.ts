@@ -3,6 +3,11 @@ import { z } from 'zod';
 
 import { type MirroringService } from '../../services/mirroring/mirroring.service.js';
 
+import {
+  screenshotDelaySchema,
+  withScreenshotAfter,
+} from './screenshot-after.js';
+
 export function registerAutomationTools(
   server: McpServer,
   mirroringService: MirroringService,
@@ -13,12 +18,13 @@ export function registerAutomationTools(
     {
       x: z.number().describe('X coordinate to tap (in screenshot pixels)'),
       y: z.number().describe('Y coordinate to tap (in screenshot pixels)'),
+      screenshotDelay: screenshotDelaySchema,
     },
-    async ({ x, y }) => {
+    async ({ x, y, screenshotDelay }) => {
       await mirroringService.tap(x, y);
-      return {
-        content: [{ type: 'text', text: `Tapped at (${x}, ${y})` }],
-      };
+      return withScreenshotAfter(mirroringService, screenshotDelay, [
+        { type: 'text', text: `Tapped at (${x}, ${y})` },
+      ]);
     },
   );
 
@@ -31,18 +37,17 @@ export function registerAutomationTools(
       duration: z
         .number()
         .describe('Hold duration in seconds (e.g. 2 for two seconds)'),
+      screenshotDelay: screenshotDelaySchema,
     },
-    async ({ x, y, duration }) => {
+    async ({ x, y, duration, screenshotDelay }) => {
       const durationMs = Math.round(duration * 1000);
       await mirroringService.longPress(x, y, durationMs);
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Long pressed at (${x}, ${y}) for ${duration}s`,
-          },
-        ],
-      };
+      return withScreenshotAfter(mirroringService, screenshotDelay, [
+        {
+          type: 'text',
+          text: `Long pressed at (${x}, ${y}) for ${duration}s`,
+        },
+      ]);
     },
   );
 
@@ -62,13 +67,22 @@ export function registerAutomationTools(
         .number()
         .optional()
         .describe('Swipe duration in milliseconds (default: 500)'),
+      screenshotDelay: screenshotDelaySchema,
     },
-    async ({ direction, startX, startY, endX, endY, duration }) => {
+    async ({
+      direction,
+      startX,
+      startY,
+      endX,
+      endY,
+      duration,
+      screenshotDelay,
+    }) => {
       if (direction) {
         await mirroringService.swipeDirection(direction, startX, startY);
-        return {
-          content: [{ type: 'text', text: `Swiped ${direction}` }],
-        };
+        return withScreenshotAfter(mirroringService, screenshotDelay, [
+          { type: 'text', text: `Swiped ${direction}` },
+        ]);
       }
 
       if (
@@ -78,14 +92,12 @@ export function registerAutomationTools(
         endY !== undefined
       ) {
         await mirroringService.swipe(startX, startY, endX, endY, duration);
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Swiped from (${startX}, ${startY}) to (${endX}, ${endY})`,
-            },
-          ],
-        };
+        return withScreenshotAfter(mirroringService, screenshotDelay, [
+          {
+            type: 'text',
+            text: `Swiped from (${startX}, ${startY}) to (${endX}, ${endY})`,
+          },
+        ]);
       }
 
       return {
@@ -105,12 +117,13 @@ export function registerAutomationTools(
     'Type text into the currently focused input field',
     {
       text: z.string().describe('Text to type'),
+      screenshotDelay: screenshotDelaySchema,
     },
-    async ({ text }) => {
+    async ({ text, screenshotDelay }) => {
       await mirroringService.typeText(text);
-      return {
-        content: [{ type: 'text', text: `Typed: "${text}"` }],
-      };
+      return withScreenshotAfter(mirroringService, screenshotDelay, [
+        { type: 'text', text: `Typed: "${text}"` },
+      ]);
     },
   );
 
@@ -121,12 +134,13 @@ export function registerAutomationTools(
       button: z
         .enum(['home', 'volumeUp', 'volumeDown'])
         .describe('Button to press'),
+      screenshotDelay: screenshotDelaySchema,
     },
-    async ({ button }) => {
+    async ({ button, screenshotDelay }) => {
       await mirroringService.pressButton(button);
-      return {
-        content: [{ type: 'text', text: `Pressed button: ${button}` }],
-      };
+      return withScreenshotAfter(mirroringService, screenshotDelay, [
+        { type: 'text', text: `Pressed button: ${button}` },
+      ]);
     },
   );
 }

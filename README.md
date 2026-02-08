@@ -144,21 +144,21 @@ Runs the server with `tsx watch` for automatic restarts on file changes.
 
 ### UI Automation
 
-| Tool           | Description                                             | Parameters                                                        |
-| -------------- | ------------------------------------------------------- | ----------------------------------------------------------------- |
-| `tap`          | Tap at coordinates (in screenshot pixels)               | `x`, `y`                                                          |
-| `long_press`   | Press and hold at coordinates for a duration            | `x`, `y`, `duration` (seconds)                                    |
-| `swipe`        | Swipe in a direction or between points                  | `direction?`, `startX?`, `startY?`, `endX?`, `endY?`, `duration?` |
-| `type_text`    | Type text into the focused input field                  | `text`                                                            |
-| `press_button` | Press a button (home only; simulated via swipe gesture) | `button`                                                          |
+| Tool           | Description                                             | Parameters                                                                            |
+| -------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `tap`          | Tap at coordinates (in screenshot pixels)               | `x`, `y`, `screenshotDelay?`                                                          |
+| `long_press`   | Press and hold at coordinates for a duration            | `x`, `y`, `duration` (seconds), `screenshotDelay?`                                    |
+| `swipe`        | Swipe in a direction or between points                  | `direction?`, `startX?`, `startY?`, `endX?`, `endY?`, `duration?`, `screenshotDelay?` |
+| `type_text`    | Type text into the focused input field                  | `text`, `screenshotDelay?`                                                            |
+| `press_button` | Press a button (home only; simulated via swipe gesture) | `button`, `screenshotDelay?`                                                          |
 
 ### Device Control
 
-| Tool               | Description                              | Parameters |
-| ------------------ | ---------------------------------------- | ---------- |
-| `get_clipboard`    | Get clipboard text (Universal Clipboard) | none       |
-| `set_clipboard`    | Set clipboard text (Universal Clipboard) | `content`  |
-| `get_battery_info` | Get battery level and charging state     | none       |
+| Tool               | Description                              | Parameters                    |
+| ------------------ | ---------------------------------------- | ----------------------------- |
+| `get_clipboard`    | Get clipboard text (Universal Clipboard) | none                          |
+| `set_clipboard`    | Set clipboard text (Universal Clipboard) | `content`, `screenshotDelay?` |
+| `get_battery_info` | Get battery level and charging state     | none                          |
 
 ### How the AI navigates
 
@@ -194,6 +194,7 @@ src/
     tools/
       device-tools.ts           # list_devices, device_info, get_screen_info
       screenshot-tools.ts       # screenshot
+      screenshot-after.ts       # withScreenshotAfter() helper, screenshotDelaySchema
       automation-tools.ts       # tap, long_press, swipe, type_text, press_button
       mirroring-control-tools.ts # get_clipboard, set_clipboard, get_battery_info
   container.ts                  # Dependency injection container

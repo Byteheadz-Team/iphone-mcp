@@ -18,6 +18,7 @@ Files:
 - `screenshot-tools.ts` — `screenshot`
 - `automation-tools.ts` — `tap`, `long_press`, `swipe`, `type_text`, `press_button`
 - `mirroring-control-tools.ts` — `get_clipboard`, `set_clipboard`, `get_battery_info`
+- `screenshot-after.ts` — shared `withScreenshotAfter()` helper and `screenshotDelaySchema`. Action tools use this to optionally return a screenshot after the action by accepting a `screenshotDelay` parameter.
 
 When adding a new tool:
 

@@ -4,6 +4,11 @@ import { z } from 'zod';
 import { type DeviceService } from '../../services/device/device.service.js';
 import { type MirroringService } from '../../services/mirroring/mirroring.service.js';
 
+import {
+  screenshotDelaySchema,
+  withScreenshotAfter,
+} from './screenshot-after.js';
+
 export function registerMirroringControlTools(
   server: McpServer,
   mirroringService: MirroringService,
@@ -26,12 +31,13 @@ export function registerMirroringControlTools(
     'Set the clipboard content (uses Universal Clipboard)',
     {
       content: z.string().describe('Text to set in the clipboard'),
+      screenshotDelay: screenshotDelaySchema,
     },
-    async ({ content }) => {
+    async ({ content, screenshotDelay }) => {
       await mirroringService.setClipboard(content);
-      return {
-        content: [{ type: 'text', text: 'Clipboard content set' }],
-      };
+      return withScreenshotAfter(mirroringService, screenshotDelay, [
+        { type: 'text', text: 'Clipboard content set' },
+      ]);
     },
   );
 
