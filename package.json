@@ -1,14 +1,45 @@
 {
   "name": "iphone-mcp",
   "version": "0.1.0",
-  "description": "MCP server for controlling a physical iPhone connected via USB",
+  "description": "MCP server that controls a physical iPhone from macOS via iPhone Mirroring. Screenshot, tap, swipe, type — no Xcode or WebDriverAgent required.",
   "type": "module",
   "packageManager": "yarn@4.12.0",
+  "license": "MIT",
+  "author": "yev",
+  "homepage": "https://github.com/yev/iphone-mcp#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yev/iphone-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yev/iphone-mcp/issues"
+  },
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "iphone",
+    "ios",
+    "iphone-mirroring",
+    "automation",
+    "ai-agent",
+    "claude",
+    "screenshot",
+    "ui-automation",
+    "macos"
+  ],
   "engines": {
     "node": ">=24"
   },
-  "bin": "./dist/index.js",
-  "main": "dist/index.js",
+  "os": [
+    "darwin"
+  ],
+  "bin": {
+    "iphone-mcp": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsup",
@@ -19,7 +50,8 @@
     "format": "prettier --write .",
     "check": "prettier --write . && eslint --cache --fix . && tsc --noEmit",
     "doctor": "tsx src/doctor.ts",
-    "prepare": "husky"
+    "prepare": "husky",
+    "prepublishOnly": "yarn build"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0",
