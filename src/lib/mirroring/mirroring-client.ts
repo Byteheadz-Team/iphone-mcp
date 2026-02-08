@@ -101,7 +101,7 @@ JSON.stringify({ x, y, width, height, windowId });
         tmpPath,
       ]);
 
-      // Downscale to 1x so screenshot pixels = macOS screen points.
+      // Resample to the caller's target width (e.g. 2x for Retina screenshots).
       if (targetWidth) {
         await execFile('sips', [
           '--resampleWidth',

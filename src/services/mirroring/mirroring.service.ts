@@ -1,6 +1,7 @@
 import { execFile as execFileCb, type ChildProcess } from 'node:child_process';
 import { promisify } from 'node:util';
 
+import config from '../../config.js';
 import { MirroringClient, type WindowInfo } from '../../lib/mirroring/index.js';
 import { Module } from '../../types.js';
 
@@ -8,8 +9,10 @@ import { type ButtonName, type SwipeDirection } from './mirroring.types.js';
 
 const execFile = promisify(execFileCb);
 
+const SCALE = config.mirroring.screenshotScale;
+
 // Distance in screenshot pixels for directional swipes (roughly half the screen on most iPhones).
-const SWIPE_OFFSET = 200;
+const SWIPE_OFFSET = 200 * SCALE;
 
 export interface ScreenInfo {
   width: number;
@@ -65,7 +68,7 @@ export class MirroringService extends Module {
 
   async takeScreenshot(): Promise<Buffer> {
     const info = await this.refreshWindowInfo();
-    return this.client.captureWindow(info.windowId, info.width);
+    return this.client.captureWindow(info.windowId, info.width * SCALE);
   }
 
   async tap(x: number, y: number): Promise<void> {
@@ -100,8 +103,8 @@ export class MirroringService extends Module {
   ): Promise<void> {
     const info = await this.refreshWindowInfo();
 
-    const centerX = startX ?? info.width / 2;
-    const centerY = startY ?? info.height / 2;
+    const centerX = startX ?? (info.width * SCALE) / 2;
+    const centerY = startY ?? (info.height * SCALE) / 2;
 
     let endX = centerX;
     let endY = centerY;
@@ -145,9 +148,9 @@ export class MirroringService extends Module {
       throw new Error('iPhone Mirroring window not available');
     }
     return {
-      width: this.windowInfo.width,
-      height: this.windowInfo.height,
-      scale: 1,
+      width: this.windowInfo.width * SCALE,
+      height: this.windowInfo.height * SCALE,
+      scale: SCALE,
     };
   }
 
@@ -182,8 +185,8 @@ export class MirroringService extends Module {
     pixelY: number,
   ): { x: number; y: number } {
     return {
-      x: info.x + pixelX,
-      y: info.y + pixelY,
+      x: info.x + pixelX / SCALE,
+      y: info.y + pixelY / SCALE,
     };
   }
 }

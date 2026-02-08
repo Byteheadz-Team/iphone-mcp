@@ -70,7 +70,7 @@ describe('MirroringService', () => {
 
       const result = await service.takeScreenshot();
 
-      expect(mock.captureWindow).toHaveBeenCalledWith(42, 400);
+      expect(mock.captureWindow).toHaveBeenCalledWith(42, 800);
       expect(Buffer.isBuffer(result)).toBe(true);
     });
   });
@@ -81,11 +81,11 @@ describe('MirroringService', () => {
       const service = new MirroringService(mock as unknown as MirroringClient);
       await service.start();
 
-      // Screenshot pixel (200, 400) at 1x with window at (100, 200)
-      // -> screen coords: (100 + 200, 200 + 400) = (300, 600)
+      // Screenshot pixel (200, 400) at 2x with window at (100, 200)
+      // -> screen coords: (100 + 200/2, 200 + 400/2) = (200, 400)
       await service.tap(200, 400);
 
-      expect(mock.postClick).toHaveBeenCalledWith(300, 600);
+      expect(mock.postClick).toHaveBeenCalledWith(200, 400);
     });
   });
 
@@ -98,10 +98,10 @@ describe('MirroringService', () => {
       await service.swipe(100, 200, 100, 600, 500);
 
       expect(mock.postDrag).toHaveBeenCalledWith(
-        200, // 100 + 100
-        400, // 200 + 200
-        200, // 100 + 100
-        800, // 200 + 600
+        150, // 100 + 100/2
+        300, // 200 + 200/2
+        150, // 100 + 100/2
+        500, // 200 + 600/2
         500,
       );
     });
@@ -130,7 +130,7 @@ describe('MirroringService', () => {
   });
 
   describe('getScreenInfo', () => {
-    it('returns content bounds at 1x resolution', async () => {
+    it('returns content bounds at 2x resolution', async () => {
       const mock = createMockClient();
       const service = new MirroringService(mock as unknown as MirroringClient);
       await service.start();
@@ -138,9 +138,9 @@ describe('MirroringService', () => {
       const info = await service.getScreenInfo();
 
       expect(info).toEqual({
-        width: 400,
-        height: 800,
-        scale: 1,
+        width: 800,
+        height: 1600,
+        scale: 2,
       });
     });
 

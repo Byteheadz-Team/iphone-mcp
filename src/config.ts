@@ -1,3 +1,5 @@
+import pkg from '../package.json' with { type: 'json' };
+
 type AppEnv = 'test' | 'local' | 'dev' | 'prod';
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'silent';
 
@@ -26,6 +28,8 @@ function getLogLevel(): LogLevel {
 const env = getEnv();
 
 const config = {
+  name: pkg.name,
+  version: pkg.version,
   app: {
     env,
     isTest: env === 'test',
@@ -41,6 +45,7 @@ const config = {
   mirroring: {
     appName: 'iPhone Mirroring',
     launchTimeoutMs: 10_000,
+    screenshotScale: 2,
   },
 } as const;
 

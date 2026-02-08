@@ -36,7 +36,7 @@ Dependencies flow one direction: mcp → services → lib. Never import upward.
 Two channels to the iPhone:
 
 - **usbmuxd + lockdown** (device info, battery): Zero npm dependencies. Uses Node built-ins (`node:net`, `node:tls`, `node:buffer`). Unix socket at `/var/run/usbmuxd`. 16-byte LE header + XML plist. Lockdown on device port 62078: 4-byte BE length + XML plist. TLS upgrade uses pairing certificates.
-- **iPhone Mirroring** (UI automation): macOS Sequoia's `com.apple.ScreenContinuity` mirrors the iPhone screen to a macOS window. The server takes screenshots via `screencapture` (downscaled to 1x via `sips`), injects clicks/drags via `CGEvent` (JXA/osascript), and types via AppleScript `keystroke`. The window is activated before each input event. Zero setup beyond what Apple provides.
+- **iPhone Mirroring** (UI automation): macOS Sequoia's `com.apple.ScreenContinuity` mirrors the iPhone screen to a macOS window. The server takes screenshots via `screencapture` (resampled to 2x via `sips`), injects clicks/drags via `CGEvent` (JXA/osascript), and types via AppleScript `keystroke`. The window is activated before each input event. Zero setup beyond what Apple provides.
 
 ## Testing
 
@@ -51,6 +51,6 @@ Two channels to the iPhone:
 - `Module.start()` and `Module.stop()` return `Promise<void> | void` — always `await` them to avoid `@typescript-eslint/no-floating-promises`.
 - Plist `PlistDict` values are `PlistValue`, not `PlistValue | undefined` — interfaces extending it can't have optional properties of plist types.
 - usbmuxd port encoding is byte-swapped: `((port & 0xff) << 8) | ((port >> 8) & 0xff)`.
-- Coordinate mapping: screenshots are captured at native resolution then downscaled to 1x via `sips`, so screenshot pixels = macOS screen points. Mapping is simply `screen_x = window.x + pixel_x`. The `MirroringService.toScreenCoords()` method handles this.
+- Coordinate mapping: screenshots are captured at 2x resolution (configurable via `config.mirroring.screenshotScale`). The AI sends coordinates in screenshot pixels; `MirroringService.toScreenCoords()` converts to macOS screen points by dividing by the scale factor: `screen_x = window.x + pixel_x / scale`.
 - The screenshot output includes the window title bar. Coordinates the AI provides from the screenshot already account for it.
 - `MirroringClient` activates the iPhone Mirroring window before every input event (click, drag, type). Without this, `CGEvent` posts may be silently ignored if the window isn't frontmost.

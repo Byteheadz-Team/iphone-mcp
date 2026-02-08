@@ -14,7 +14,7 @@ export function registerAutomationTools(
 ): void {
   server.tool(
     'tap',
-    'Tap on the screen at the given coordinates',
+    'Tap on the screen at the given coordinates. Take a screenshot first to confirm the current screen state.',
     {
       x: z.number().describe('X coordinate to tap (in screenshot pixels)'),
       y: z.number().describe('Y coordinate to tap (in screenshot pixels)'),
@@ -30,7 +30,7 @@ export function registerAutomationTools(
 
   server.tool(
     'long_press',
-    'Press and hold at the given coordinates for a duration',
+    'Press and hold at the given coordinates for a duration. Take a screenshot first to confirm the current screen state.',
     {
       x: z.number().describe('X coordinate (in screenshot pixels)'),
       y: z.number().describe('Y coordinate (in screenshot pixels)'),
@@ -53,7 +53,7 @@ export function registerAutomationTools(
 
   server.tool(
     'swipe',
-    'Swipe on the screen in a direction or between two points',
+    'Swipe on the screen in a direction or between two points. Take a screenshot first to confirm the current screen state.',
     {
       direction: z
         .enum(['up', 'down', 'left', 'right'])
@@ -114,7 +114,7 @@ export function registerAutomationTools(
 
   server.tool(
     'type_text',
-    'Type text into the currently focused input field',
+    'Type text into the currently focused input field. Always use this tool for text input — do not wait for the on-screen keyboard to appear, it will not be visible in screenshots but this tool will still work. Take a screenshot first to confirm the current screen state.',
     {
       text: z.string().describe('Text to type'),
       screenshotDelay: screenshotDelaySchema,

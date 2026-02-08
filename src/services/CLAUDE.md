@@ -10,7 +10,7 @@ Uses `UsbmuxClient` to list attached devices and `LockdownClient` to fetch devic
 
 `MirroringService` wraps `MirroringClient` (from `lib/mirroring/`) with `Module` lifecycle and coordinate mapping. On `start()`, it checks accessibility permissions, launches iPhone Mirroring, and caches window info.
 
-Key responsibility: **coordinate mapping**. Screenshots are captured at 1x (nominal resolution), so screenshot pixels = macOS screen points. Mapping is simply `screen_x = window.x + pixel_x`. The AI sends coordinates in screenshot pixels; the service translates them to macOS screen coordinates for CGEvent injection.
+Key responsibility: **coordinate mapping**. Screenshots are captured at 2x resolution (configurable via `config.mirroring.screenshotScale`). The AI sends coordinates in screenshot pixels; the service divides by the scale factor to convert to macOS screen points: `screen_x = window.x + pixel_x / scale`.
 
 Also provides clipboard via `pbpaste`/`pbcopy` (Universal Clipboard) and home button simulation via ⌘1 shortcut.
 
