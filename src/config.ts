@@ -46,6 +46,8 @@ const config = {
     appName: 'iPhone Mirroring',
     launchTimeoutMs: 10_000,
     screenshotScale: 2,
+    overlayGridSpacing: 80,
+    overlayGridPadding: 40,
   },
 } as const;
 

@@ -1,20 +1,22 @@
 import { execFile as execFileCb, type ChildProcess } from 'node:child_process';
-import { promisify } from 'node:util';
 
 import { MirroringClient, type WindowInfo } from '@lib/mirroring';
+import { execFile } from '@lib/utils';
 import config from '@src/config';
 import { Module } from '@src/types';
 
 import { type ButtonName, SwipeEasing } from './mirroring.types';
 
-const execFile = promisify(execFileCb);
-
 const SCALE = config.mirroring.screenshotScale;
+const GRID_SPACING = config.mirroring.overlayGridSpacing;
+const GRID_PADDING = config.mirroring.overlayGridPadding;
+const COORD_OFFSET = GRID_SPACING ? GRID_PADDING : 0;
 
 export interface ScreenInfo {
   width: number;
   height: number;
   scale: number;
+  gridPadding: number;
 }
 
 export class MirroringService extends Module {
@@ -65,7 +67,12 @@ export class MirroringService extends Module {
 
   async takeScreenshot(): Promise<Buffer> {
     const info = await this.refreshWindowInfo();
-    return this.client.captureWindow(info.windowId, info.width * SCALE);
+    return this.client.captureWindow(
+      info.windowId,
+      info.width * SCALE,
+      GRID_SPACING,
+      GRID_PADDING,
+    );
   }
 
   async tap(x: number, y: number): Promise<void> {
@@ -125,6 +132,7 @@ export class MirroringService extends Module {
       width: this.windowInfo.width * SCALE,
       height: this.windowInfo.height * SCALE,
       scale: SCALE,
+      gridPadding: COORD_OFFSET,
     };
   }
 
@@ -159,8 +167,8 @@ export class MirroringService extends Module {
     pixelY: number,
   ): { x: number; y: number } {
     return {
-      x: info.x + pixelX / SCALE,
-      y: info.y + pixelY / SCALE,
+      x: info.x + (pixelX - COORD_OFFSET) / SCALE,
+      y: info.y + (pixelY - COORD_OFFSET) / SCALE,
     };
   }
 }

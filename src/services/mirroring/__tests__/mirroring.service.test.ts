@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { type MirroringClient, SwipeEasing } from '@lib/mirroring';
+import config from '@src/config';
 
 import { MirroringService } from '../mirroring.service';
 
@@ -71,7 +72,12 @@ describe('MirroringService', () => {
 
       const result = await service.takeScreenshot();
 
-      expect(mock.captureWindow).toHaveBeenCalledWith(42, 800);
+      expect(mock.captureWindow).toHaveBeenCalledWith(
+        42,
+        800,
+        config.mirroring.overlayGridSpacing,
+        config.mirroring.overlayGridPadding,
+      );
       expect(Buffer.isBuffer(result)).toBe(true);
     });
   });
@@ -82,11 +88,15 @@ describe('MirroringService', () => {
       const service = new MirroringService(mock as unknown as MirroringClient);
       await service.start();
 
-      // Screenshot pixel (200, 400) at 2x with window at (100, 200)
-      // -> screen coords: (100 + 200/2, 200 + 400/2) = (200, 400)
+      const p = config.mirroring.overlayGridPadding;
+      // Screenshot pixel (200, 400) at 2x with window at (100, 200), grid padding offset
+      // -> screen coords: (100 + (200-p)/2, 200 + (400-p)/2) = (180, 380)
       await service.tap(200, 400);
 
-      expect(mock.postClick).toHaveBeenCalledWith(200, 400);
+      expect(mock.postClick).toHaveBeenCalledWith(
+        100 + (200 - p) / 2,
+        200 + (400 - p) / 2,
+      );
     });
   });
 
@@ -96,13 +106,14 @@ describe('MirroringService', () => {
       const service = new MirroringService(mock as unknown as MirroringClient);
       await service.start();
 
+      const p = config.mirroring.overlayGridPadding;
       await service.swipe(100, 200, 100, 600, 500, SwipeEasing.EaseOut);
 
       expect(mock.postDrag).toHaveBeenCalledWith(
-        150, // 100 + 100/2
-        300, // 200 + 200/2
-        150, // 100 + 100/2
-        500, // 200 + 600/2
+        100 + (100 - p) / 2,
+        200 + (200 - p) / 2,
+        100 + (100 - p) / 2,
+        200 + (600 - p) / 2,
         500,
         SwipeEasing.EaseOut,
       );
@@ -143,6 +154,7 @@ describe('MirroringService', () => {
         width: 800,
         height: 1600,
         scale: 2,
+        gridPadding: config.mirroring.overlayGridPadding,
       });
     });
 

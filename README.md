@@ -170,6 +170,31 @@ Runs the server with `tsx watch` for automatic restarts on file changes.
 
 Unlike traditional automation frameworks, there's no `find_element` or accessibility tree. The AI uses **vision**: it takes a screenshot, sees the screen, and taps at the coordinates of what it wants to interact with. This is simpler, more robust, and matches how multimodal AI agents actually work.
 
+### Coordinate grid overlay
+
+Raw vision-based coordinate estimation is the Achilles' heel of every multimodal agent — LLMs are notoriously imprecise when translating "tap the Settings icon" into exact pixel coordinates. We solve this with a **reference grid** that is composited onto every screenshot before it reaches the model.
+
+```
+┌──────────────────────────────────┐
+│  margin    A     B     C     D   │  <- column labels (X axis)
+│         ┌─────────────────────┐  │
+│  A ─────│─ ─ ─ ─ ─ ─ ─ ─ ─ ─│  │  <- labeled reference lines
+│         │                     │  │     every 80px
+│  B ─────│─ ─ ─ ─ ─ ─ ─ ─ ─ ─│  │
+│         │    iPhone screen    │  │
+│  C ─────│─ ─ ─ ─ ─ ─ ─ ─ ─ ─│  │
+│         │                     │  │
+│  D ─────│─ ─ ─ ─ ─ ─ ─ ─ ─ ─│  │
+│         └─────────────────────┘  │
+└──────────────────────────────────┘
+   ^
+   row labels (Y axis)
+```
+
+Every screenshot is wrapped in a black margin with **labeled grid lines** at fixed intervals (default 80px). The MCP server instructions tell the model the exact pixel value of each label — `A=120, B=200, C=280, ...` — giving it a spatial coordinate system it can read directly from the image instead of guessing. The model anchors its coordinate estimates to the nearest grid intersection, then uses the `calculate` tool for precise arithmetic rather than doing mental math.
+
+The result: the AI goes from "somewhere around the middle of the screen" to "between grid lines C and D on the X axis, right on line F on the Y axis → `calculate(280 + (360-280)/2, 520)` → tap at (320, 520)". This practically eliminates mis-taps on small targets like icons, buttons, and text fields.
+
 ## Scripts
 
 | Command          | Description                                  |

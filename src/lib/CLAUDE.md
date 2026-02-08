@@ -36,3 +36,9 @@ Stateless client for interacting with the macOS iPhone Mirroring window. Uses `c
 The window is activated before every input event (click, drag, type) to ensure `CGEvent` posts are received by the correct window.
 
 `MirroringClient` is not a `Module` — it's a stateless utility (like `UsbmuxClient`). The `MirroringService` in `services/` wraps it with lifecycle and coordinate mapping.
+
+`grid-overlay.ts` composites a labeled reference grid onto screenshots using `sharp` (SVG overlay). It adds a black padding margin around the image with grid lines every N pixels and letter labels (A, B, C, ...) in the margin. The `buildGridInstructions()` function generates the label→pixel mapping text for MCP server instructions. The `overlayGrid()` function takes a PNG buffer, spacing, and padding, and returns a new PNG buffer with the grid composited.
+
+## utils/
+
+Shared utilities used across all layers. Currently exports a promisified `execFile` from `node:child_process`. Import from `@lib/utils`.

@@ -34,9 +34,7 @@
   "os": [
     "darwin"
   ],
-  "bin": {
-    "iphone-mcp": "./dist/index.js"
-  },
+  "bin": "./dist/index.js",
   "files": [
     "dist"
   ],
@@ -55,6 +53,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0",
+    "sharp": "^0.34.5",
     "zod": "^4.3.6"
   },
   "devDependencies": {

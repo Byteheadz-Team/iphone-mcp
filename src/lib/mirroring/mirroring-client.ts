@@ -1,12 +1,11 @@
-import { execFile as execFileCb } from 'node:child_process';
 import { readFile, unlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { promisify } from 'node:util';
 
+import { execFile } from '@lib/utils';
+
+import { overlayGrid } from './grid-overlay';
 import { SwipeEasing, type WindowInfo } from './mirroring.types';
-
-const execFile = promisify(execFileCb);
 
 const APP_NAME = 'iPhone Mirroring';
 const LAUNCH_TIMEOUT_MS = 10_000;
@@ -87,7 +86,12 @@ JSON.stringify({ x, y, width, height, windowId });
     return info;
   }
 
-  async captureWindow(windowId: number, targetWidth?: number): Promise<Buffer> {
+  async captureWindow(
+    windowId: number,
+    targetWidth?: number,
+    overlayGridSpacing?: number,
+    overlayGridPadding?: number,
+  ): Promise<Buffer> {
     const tmpPath = join(tmpdir(), `iphone-mcp-screenshot-${Date.now()}.png`);
 
     try {
@@ -112,7 +116,14 @@ JSON.stringify({ x, y, width, height, windowId });
         ]);
       }
 
-      return await readFile(tmpPath);
+      const buffer = await readFile(tmpPath);
+
+      // Overlay grid lines and labels for coordinate reference.
+      if (overlayGridSpacing && overlayGridPadding) {
+        return overlayGrid(buffer, overlayGridSpacing, overlayGridPadding);
+      }
+
+      return buffer;
     } finally {
       await unlink(tmpPath).catch(() => {
         // cleanup best-effort

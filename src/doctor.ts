@@ -7,11 +7,9 @@
  * Run with: yarn doctor
  */
 
-import { execFile as execFileCb } from 'node:child_process';
 import { access } from 'node:fs/promises';
-import { promisify } from 'node:util';
 
-const execFile = promisify(execFileCb);
+import { execFile } from '@lib/utils';
 
 const PASS = '\x1b[32m✓\x1b[0m';
 const FAIL = '\x1b[31m✗\x1b[0m';
