@@ -4,10 +4,7 @@ import { z } from 'zod';
 import { type DeviceService } from '@services/device/device.service';
 import { type MirroringService } from '@services/mirroring/mirroring.service';
 
-import {
-  screenshotDelaySchema,
-  withScreenshotAfter,
-} from './screenshot-after';
+import { screenshotDelaySchema, withScreenshotAfter } from './screenshot-after';
 
 export function registerMirroringControlTools(
   server: McpServer,

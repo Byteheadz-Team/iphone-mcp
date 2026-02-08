@@ -144,13 +144,13 @@ Runs the server with `tsx watch` for automatic restarts on file changes.
 
 ### UI Automation
 
-| Tool           | Description                                             | Parameters                                                                            |
-| -------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `tap`          | Tap at coordinates (in screenshot pixels)               | `x`, `y`, `screenshotDelay?`                                                          |
-| `long_press`   | Press and hold at coordinates for a duration            | `x`, `y`, `duration` (seconds), `screenshotDelay?`                                    |
-| `swipe`        | Swipe between two points with optional easing           | `startX`, `startY`, `endX`, `endY`, `duration?`, `easing?`, `screenshotDelay?`        |
-| `type_text`    | Type text into the focused input field                  | `text`, `screenshotDelay?`                                                            |
-| `press_button` | Go to the home screen (simulated via keyboard shortcut) | `button`, `screenshotDelay?`                                                          |
+| Tool           | Description                                             | Parameters                                                                     |
+| -------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `tap`          | Tap at coordinates (in screenshot pixels)               | `x`, `y`, `screenshotDelay?`                                                   |
+| `long_press`   | Press and hold at coordinates for a duration            | `x`, `y`, `duration` (seconds), `screenshotDelay?`                             |
+| `swipe`        | Swipe between two points with optional easing           | `startX`, `startY`, `endX`, `endY`, `duration?`, `easing?`, `screenshotDelay?` |
+| `type_text`    | Type text into the focused input field                  | `text`, `screenshotDelay?`                                                     |
+| `press_button` | Go to the home screen (simulated via keyboard shortcut) | `button`, `screenshotDelay?`                                                   |
 
 ### Device Control
 
@@ -159,6 +159,12 @@ Runs the server with `tsx watch` for automatic restarts on file changes.
 | `get_clipboard`    | Get clipboard text (Universal Clipboard) | none                          |
 | `set_clipboard`    | Set clipboard text (Universal Clipboard) | `content`, `screenshotDelay?` |
 | `get_battery_info` | Get battery level and charging state     | none                          |
+
+### Utility
+
+| Tool        | Description                                                          | Parameters   |
+| ----------- | -------------------------------------------------------------------- | ------------ |
+| `calculate` | Evaluate a math expression (the AI uses this instead of mental math) | `expression` |
 
 ### How the AI navigates
 

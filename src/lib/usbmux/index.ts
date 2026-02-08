@@ -6,8 +6,4 @@ export type {
   UsbmuxMessage,
   UsbmuxResponse,
 } from './types';
-export {
-  UsbmuxMessageType,
-  USBMUX_HEADER_SIZE,
-  USBMUX_VERSION,
-} from './types';
+export { UsbmuxMessageType, USBMUX_HEADER_SIZE, USBMUX_VERSION } from './types';

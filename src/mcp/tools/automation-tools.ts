@@ -4,10 +4,7 @@ import { z } from 'zod';
 import { type MirroringService } from '@services/mirroring/mirroring.service';
 import { SwipeEasing } from '@services/mirroring/mirroring.types';
 
-import {
-  screenshotDelaySchema,
-  withScreenshotAfter,
-} from './screenshot-after';
+import { screenshotDelaySchema, withScreenshotAfter } from './screenshot-after';
 
 export function registerAutomationTools(
   server: McpServer,
@@ -56,12 +53,8 @@ export function registerAutomationTools(
     'swipe',
     'Swipe on the screen between two points. Take a screenshot first to confirm the current screen state. Swiping up from the bottom edge will NOT go to the home screen — use the press_button tool with button "home" instead.',
     {
-      startX: z
-        .number()
-        .describe('Start X coordinate (in screenshot pixels)'),
-      startY: z
-        .number()
-        .describe('Start Y coordinate (in screenshot pixels)'),
+      startX: z.number().describe('Start X coordinate (in screenshot pixels)'),
+      startY: z.number().describe('Start Y coordinate (in screenshot pixels)'),
       endX: z.number().describe('End X coordinate (in screenshot pixels)'),
       endY: z.number().describe('End Y coordinate (in screenshot pixels)'),
       duration: z
@@ -76,8 +69,23 @@ export function registerAutomationTools(
         ),
       screenshotDelay: screenshotDelaySchema,
     },
-    async ({ startX, startY, endX, endY, duration, easing, screenshotDelay }) => {
-      await mirroringService.swipe(startX, startY, endX, endY, duration, easing);
+    async ({
+      startX,
+      startY,
+      endX,
+      endY,
+      duration,
+      easing,
+      screenshotDelay,
+    }) => {
+      await mirroringService.swipe(
+        startX,
+        startY,
+        endX,
+        endY,
+        duration,
+        easing,
+      );
       return withScreenshotAfter(mirroringService, screenshotDelay, [
         {
           type: 'text',

@@ -8,6 +8,7 @@ import { Module } from '@src/types';
 
 import { registerAutomationTools } from './tools/automation-tools';
 import { registerDeviceTools } from './tools/device-tools';
+import { registerMathTools } from './tools/math-tools';
 import { registerMirroringControlTools } from './tools/mirroring-control-tools';
 import { registerScreenshotTools } from './tools/screenshot-tools';
 
@@ -31,6 +32,7 @@ export class McpServerModule extends Module {
         instructions: [
           'Always take a screenshot before performing any action to ensure you have an up-to-date view of the screen.',
           'Always use the type_text tool to enter text. Do not wait for the on-screen keyboard to appear — it will not be visible in screenshots, but type_text will still work.',
+          'Always use the calculate tool for any arithmetic or coordinate math — never calculate mentally. This includes computing midpoints, offsets, distances, and any other numeric operations.',
         ].join('\n'),
       },
     );
@@ -50,6 +52,7 @@ export class McpServerModule extends Module {
       this.deps.mirroringService,
       this.deps.deviceService,
     );
+    registerMathTools(this.server);
   }
 
   override async start(): Promise<void> {
