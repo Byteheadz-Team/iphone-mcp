@@ -11,10 +11,13 @@ export function registerMirroringControlTools(
   mirroringService: MirroringService,
   deviceService: DeviceService,
 ): void {
-  server.tool(
+  server.registerTool(
     'get_clipboard',
-    'Get the current clipboard content (uses Universal Clipboard)',
-    {},
+    {
+      description:
+        'Get the current clipboard content (uses Universal Clipboard)',
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    },
     async () => {
       const content = await mirroringService.getClipboard();
       return {
@@ -23,12 +26,15 @@ export function registerMirroringControlTools(
     },
   );
 
-  server.tool(
+  server.registerTool(
     'set_clipboard',
-    'Set the clipboard content (uses Universal Clipboard)',
     {
-      content: z.string().describe('Text to set in the clipboard'),
-      screenshotDelay: screenshotDelaySchema,
+      description: 'Set the clipboard content (uses Universal Clipboard)',
+      inputSchema: {
+        content: z.string().describe('Text to set in the clipboard'),
+        screenshotDelay: screenshotDelaySchema,
+      },
+      annotations: { destructiveHint: false, openWorldHint: false },
     },
     async ({ content, screenshotDelay }) => {
       await mirroringService.setClipboard(content);
@@ -38,10 +44,13 @@ export function registerMirroringControlTools(
     },
   );
 
-  server.tool(
+  server.registerTool(
     'get_battery_info',
-    'Get the battery level and charging state of the connected device',
-    {},
+    {
+      description:
+        'Get the battery level and charging state of the connected device',
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    },
     async () => {
       const battery = await deviceService.getBatteryInfo();
       return {

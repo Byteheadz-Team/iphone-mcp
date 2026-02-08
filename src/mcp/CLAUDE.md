@@ -8,7 +8,7 @@ Dependencies: `DeviceService`, `MirroringService`.
 
 ## tools/
 
-Each file registers a group of related tools using `server.tool(name, description, zodSchema, handler)`. Tool handlers return `{ content: [...] }` where content is either `{ type: 'text', text }` or `{ type: 'image', data, mimeType }` (for screenshots).
+Each file registers a group of related tools using `server.registerTool(name, config, handler)` where config is `{ description, inputSchema?, annotations? }`. Tool handlers return `{ content: [...] }` where content is either `{ type: 'text', text }` or `{ type: 'image', data, mimeType }` (for screenshots). All tools set `annotations` with `readOnlyHint` (for query tools) or `destructiveHint: false` (for UI actions) and `openWorldHint: false`.
 
 Error responses set `isError: true` in the return value rather than throwing — this gives the MCP client a readable error message instead of a stack trace.
 

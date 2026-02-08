@@ -6,10 +6,12 @@ export function registerScreenshotTools(
   server: McpServer,
   mirroringService: MirroringService,
 ): void {
-  server.tool(
+  server.registerTool(
     'screenshot',
-    'Take a screenshot of the connected iOS device',
-    {},
+    {
+      description: 'Take a screenshot of the connected iOS device',
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    },
     async () => {
       const data = await mirroringService.takeScreenshot();
       return {

@@ -286,15 +286,22 @@ function evaluate(expression: string): number {
 // --- MCP tool registration ---
 
 export function registerMathTools(server: McpServer): void {
-  server.tool(
+  server.registerTool(
     'calculate',
-    'Evaluate a mathematical expression. ALWAYS use this tool for any arithmetic or coordinate calculations — never calculate in your head. Supports: +, -, *, /, % (modulo), parentheses, and functions: round(), floor(), ceil(), abs(), sqrt(), pow(), min(), max(). Examples: "320 + 150", "round((480 - 100) / 2)", "min(100, 200)", "sqrt(3*3 + 4*4)".',
     {
-      expression: z
-        .string()
-        .describe(
-          'Mathematical expression to evaluate (e.g. "320 + 150", "round((480 - 100) / 2)", "min(100, 200, 300)")',
-        ),
+      description:
+        'Evaluate a mathematical expression. ALWAYS use this tool for any arithmetic or coordinate calculations — never calculate in your head. Supports: +, -, *, /, % (modulo), parentheses, and functions: round(), floor(), ceil(), abs(), sqrt(), pow(), min(), max(). Examples: "320 + 150", "round((480 - 100) / 2)", "min(100, 200)", "sqrt(3*3 + 4*4)".',
+      inputSchema: {
+        expression: z
+          .string()
+          .describe(
+            'Mathematical expression to evaluate (e.g. "320 + 150", "round((480 - 100) / 2)", "min(100, 200, 300)")',
+          ),
+      },
+      annotations: {
+        readOnlyHint: true,
+        openWorldHint: false,
+      },
     },
     ({ expression }) => {
       try {

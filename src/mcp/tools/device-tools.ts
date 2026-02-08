@@ -9,10 +9,12 @@ export function registerDeviceTools(
   deviceService: DeviceService,
   mirroringService: MirroringService,
 ): void {
-  server.tool(
+  server.registerTool(
     'list_devices',
-    'List all connected iOS devices',
-    {},
+    {
+      description: 'List all connected iOS devices',
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    },
     async () => {
       const devices = await deviceService.listDevices();
       return {
@@ -21,14 +23,17 @@ export function registerDeviceTools(
     },
   );
 
-  server.tool(
+  server.registerTool(
     'device_info',
-    'Get detailed information about a connected iOS device',
     {
-      udid: z
-        .string()
-        .optional()
-        .describe('Device UDID (uses first device if not specified)'),
+      description: 'Get detailed information about a connected iOS device',
+      inputSchema: {
+        udid: z
+          .string()
+          .optional()
+          .describe('Device UDID (uses first device if not specified)'),
+      },
+      annotations: { readOnlyHint: true, openWorldHint: false },
     },
     async ({ udid }) => {
       let targetUdid = udid;
@@ -43,10 +48,13 @@ export function registerDeviceTools(
     },
   );
 
-  server.tool(
+  server.registerTool(
     'get_screen_info',
-    'Get screen dimensions and scale factor of the iPhone Mirroring window',
-    {},
+    {
+      description:
+        'Get screen dimensions and scale factor of the iPhone Mirroring window',
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    },
     async () => {
       const screenInfo = await mirroringService.getScreenInfo();
       return {
