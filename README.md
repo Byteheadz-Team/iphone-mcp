@@ -148,9 +148,9 @@ Runs the server with `tsx watch` for automatic restarts on file changes.
 | -------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | `tap`          | Tap at coordinates (in screenshot pixels)               | `x`, `y`, `screenshotDelay?`                                                          |
 | `long_press`   | Press and hold at coordinates for a duration            | `x`, `y`, `duration` (seconds), `screenshotDelay?`                                    |
-| `swipe`        | Swipe in a direction or between points                  | `direction?`, `startX?`, `startY?`, `endX?`, `endY?`, `duration?`, `screenshotDelay?` |
+| `swipe`        | Swipe between two points with optional easing           | `startX`, `startY`, `endX`, `endY`, `duration?`, `easing?`, `screenshotDelay?`        |
 | `type_text`    | Type text into the focused input field                  | `text`, `screenshotDelay?`                                                            |
-| `press_button` | Press a button (home only; simulated via swipe gesture) | `button`, `screenshotDelay?`                                                          |
+| `press_button` | Go to the home screen (simulated via keyboard shortcut) | `button`, `screenshotDelay?`                                                          |
 
 ### Device Control
 

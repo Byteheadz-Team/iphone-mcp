@@ -1,2 +1,2 @@
 export { MirroringClient } from './mirroring-client';
-export { type WindowInfo } from './mirroring.types';
+export { SwipeEasing, type WindowInfo } from './mirroring.types';

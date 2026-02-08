@@ -2,6 +2,7 @@ import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 
 import { type MirroringService } from '@services/mirroring/mirroring.service';
+import { SwipeEasing } from '@services/mirroring/mirroring.types';
 
 import {
   screenshotDelaySchema,
@@ -53,62 +54,36 @@ export function registerAutomationTools(
 
   server.tool(
     'swipe',
-    'Swipe on the screen in a direction or between two points. Take a screenshot first to confirm the current screen state.',
+    'Swipe on the screen between two points. Take a screenshot first to confirm the current screen state. Swiping up from the bottom edge will NOT go to the home screen — use the press_button tool with button "home" instead.',
     {
-      direction: z
-        .enum(['up', 'down', 'left', 'right'])
-        .optional()
-        .describe('Swipe direction'),
-      startX: z.number().optional().describe('Start X coordinate'),
-      startY: z.number().optional().describe('Start Y coordinate'),
-      endX: z.number().optional().describe('End X coordinate'),
-      endY: z.number().optional().describe('End Y coordinate'),
+      startX: z
+        .number()
+        .describe('Start X coordinate (in screenshot pixels)'),
+      startY: z
+        .number()
+        .describe('Start Y coordinate (in screenshot pixels)'),
+      endX: z.number().describe('End X coordinate (in screenshot pixels)'),
+      endY: z.number().describe('End Y coordinate (in screenshot pixels)'),
       duration: z
         .number()
         .optional()
         .describe('Swipe duration in milliseconds (default: 500)'),
+      easing: z
+        .nativeEnum(SwipeEasing)
+        .optional()
+        .describe(
+          'Speed curve. ease-out (default): natural deceleration — best for scrolling, pulling down to refresh, and most swipes. ease-in: accelerating flick — best for dismissing cards, throwing items, or fling-to-delete. ease-in-out: slow start and end — best for precise repositioning like reordering a list or moving a slider. linear: constant speed — rarely needed, use for mechanical drags like adjusting a map.',
+        ),
       screenshotDelay: screenshotDelaySchema,
     },
-    async ({
-      direction,
-      startX,
-      startY,
-      endX,
-      endY,
-      duration,
-      screenshotDelay,
-    }) => {
-      if (direction) {
-        await mirroringService.swipeDirection(direction, startX, startY);
-        return withScreenshotAfter(mirroringService, screenshotDelay, [
-          { type: 'text', text: `Swiped ${direction}` },
-        ]);
-      }
-
-      if (
-        startX !== undefined &&
-        startY !== undefined &&
-        endX !== undefined &&
-        endY !== undefined
-      ) {
-        await mirroringService.swipe(startX, startY, endX, endY, duration);
-        return withScreenshotAfter(mirroringService, screenshotDelay, [
-          {
-            type: 'text',
-            text: `Swiped from (${startX}, ${startY}) to (${endX}, ${endY})`,
-          },
-        ]);
-      }
-
-      return {
-        content: [
-          {
-            type: 'text',
-            text: 'Provide either a direction or start/end coordinates',
-          },
-        ],
-        isError: true,
-      };
+    async ({ startX, startY, endX, endY, duration, easing, screenshotDelay }) => {
+      await mirroringService.swipe(startX, startY, endX, endY, duration, easing);
+      return withScreenshotAfter(mirroringService, screenshotDelay, [
+        {
+          type: 'text',
+          text: `Swiped from (${startX}, ${startY}) to (${endX}, ${endY})`,
+        },
+      ]);
     },
   );
 
@@ -129,7 +104,7 @@ export function registerAutomationTools(
 
   server.tool(
     'press_button',
-    'Press a button on the device. Only "home" is supported (simulated via swipe-up gesture). Volume buttons are not available via iPhone Mirroring.',
+    'Press a button on the device. Only "home" is supported (simulated via keyboard shortcut). Volume buttons are not available via iPhone Mirroring. Use this tool to go to the home screen — swiping up from the bottom edge will not work.',
     {
       button: z
         .enum(['home', 'volumeUp', 'volumeDown'])

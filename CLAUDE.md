@@ -57,3 +57,5 @@ Two channels to the iPhone:
 - Coordinate mapping: screenshots are captured at 2x resolution (configurable via `config.mirroring.screenshotScale`). The AI sends coordinates in screenshot pixels; `MirroringService.toScreenCoords()` converts to macOS screen points by dividing by the scale factor: `screen_x = window.x + pixel_x / scale`.
 - The screenshot output includes the window title bar. Coordinates the AI provides from the screenshot already account for it.
 - `MirroringClient` activates the iPhone Mirroring window before every input event (click, drag, type). Without this, `CGEvent` posts may be silently ignored if the window isn't frontmost.
+- Swipes always require explicit start/end coordinates (no direction-based mode). `postDrag()` applies easing curves (default `'ease-out'`); the `SwipeEasing` type is defined in `lib/mirroring/mirroring.types.ts`.
+- Swiping up from the bottom edge does not trigger the iOS home gesture via iPhone Mirroring. Use `press_button` with `"home"` instead.

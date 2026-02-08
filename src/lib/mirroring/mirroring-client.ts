@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 
-import { type WindowInfo } from './mirroring.types';
+import { SwipeEasing, type WindowInfo } from './mirroring.types';
 
 const execFile = promisify(execFileCb);
 
@@ -161,6 +161,7 @@ $.CGEventPost($.kCGHIDEventTap, mouseUp);
     endX: number,
     endY: number,
     durationMs: number,
+    easing: SwipeEasing = SwipeEasing.EaseOut,
   ): Promise<void> {
     await this.activate();
 
@@ -177,13 +178,23 @@ const endX = ${endX};
 const endY = ${endY};
 const steps = ${steps};
 const delayPerStep = ${delayPerStep};
+const easing = '${easing}';
+
+function ease(t) {
+  switch (easing) {
+    case 'ease-in': return t * t * t;
+    case 'ease-out': return 1 - Math.pow(1 - t, 3);
+    case 'ease-in-out': return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    default: return t;
+  }
+}
 
 const startPoint = $.CGPointMake(startX, startY);
 const mouseDown = $.CGEventCreateMouseEvent(null, $.kCGEventLeftMouseDown, startPoint, $.kCGMouseButtonLeft);
 $.CGEventPost($.kCGHIDEventTap, mouseDown);
 
 for (let i = 1; i <= steps; i++) {
-  const t = i / steps;
+  const t = ease(i / steps);
   const cx = startX + (endX - startX) * t;
   const cy = startY + (endY - startY) * t;
   const dragPoint = $.CGPointMake(cx, cy);

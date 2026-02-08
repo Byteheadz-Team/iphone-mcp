@@ -5,14 +5,11 @@ import { MirroringClient, type WindowInfo } from '@lib/mirroring';
 import config from '@src/config';
 import { Module } from '@src/types';
 
-import { type ButtonName, type SwipeDirection } from './mirroring.types';
+import { type ButtonName, SwipeEasing } from './mirroring.types';
 
 const execFile = promisify(execFileCb);
 
 const SCALE = config.mirroring.screenshotScale;
-
-// Distance in screenshot pixels for directional swipes (roughly half the screen on most iPhones).
-const SWIPE_OFFSET = 200 * SCALE;
 
 export interface ScreenInfo {
   width: number;
@@ -89,42 +86,19 @@ export class MirroringService extends Module {
     endX: number,
     endY: number,
     duration?: number,
+    easing?: SwipeEasing,
   ): Promise<void> {
     const info = await this.refreshWindowInfo();
     const start = this.toScreenCoords(info, startX, startY);
     const end = this.toScreenCoords(info, endX, endY);
-    await this.client.postDrag(start.x, start.y, end.x, end.y, duration ?? 500);
-  }
-
-  async swipeDirection(
-    direction: SwipeDirection,
-    startX?: number,
-    startY?: number,
-  ): Promise<void> {
-    const info = await this.refreshWindowInfo();
-
-    const centerX = startX ?? (info.width * SCALE) / 2;
-    const centerY = startY ?? (info.height * SCALE) / 2;
-
-    let endX = centerX;
-    let endY = centerY;
-
-    switch (direction) {
-      case 'up':
-        endY = centerY - SWIPE_OFFSET;
-        break;
-      case 'down':
-        endY = centerY + SWIPE_OFFSET;
-        break;
-      case 'left':
-        endX = centerX - SWIPE_OFFSET;
-        break;
-      case 'right':
-        endX = centerX + SWIPE_OFFSET;
-        break;
-    }
-
-    await this.swipe(centerX, centerY, endX, endY, 500);
+    await this.client.postDrag(
+      start.x,
+      start.y,
+      end.x,
+      end.y,
+      duration ?? 500,
+      easing ?? SwipeEasing.EaseOut,
+    );
   }
 
   async typeText(text: string): Promise<void> {

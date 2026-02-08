@@ -4,6 +4,7 @@ import { readFile, unlink } from 'node:fs/promises';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { MirroringClient } from '../mirroring-client';
+import { SwipeEasing } from '../mirroring.types';
 
 vi.mock('node:child_process', () => ({
   execFile: vi.fn(),
@@ -170,6 +171,27 @@ describe('MirroringClient', () => {
       expect(dragScript).toContain('kCGEventLeftMouseDown');
       expect(dragScript).toContain('kCGEventLeftMouseDragged');
       expect(dragScript).toContain('kCGEventLeftMouseUp');
+    });
+
+    it('defaults to ease-out easing', async () => {
+      const mock = mockExecFileSequence(['', '']);
+
+      const client = new MirroringClient();
+      await client.postDrag(0, 0, 0, 100, 500);
+
+      const dragScript = getCallScript(mock, 1);
+      expect(dragScript).toContain("const easing = 'ease-out'");
+      expect(dragScript).toContain('function ease(t)');
+    });
+
+    it('uses the specified easing in the JXA script', async () => {
+      const mock = mockExecFileSequence(['', '']);
+
+      const client = new MirroringClient();
+      await client.postDrag(0, 0, 0, 100, 500, SwipeEasing.EaseIn);
+
+      const dragScript = getCallScript(mock, 1);
+      expect(dragScript).toContain("const easing = 'ease-in'");
     });
   });
 

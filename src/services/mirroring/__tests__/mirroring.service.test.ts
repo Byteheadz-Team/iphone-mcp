@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { type MirroringClient } from '@lib/mirroring';
+import { type MirroringClient, SwipeEasing } from '@lib/mirroring';
 
 import { MirroringService } from '../mirroring.service';
 
@@ -96,7 +96,7 @@ describe('MirroringService', () => {
       const service = new MirroringService(mock as unknown as MirroringClient);
       await service.start();
 
-      await service.swipe(100, 200, 100, 600, 500);
+      await service.swipe(100, 200, 100, 600, 500, SwipeEasing.EaseOut);
 
       expect(mock.postDrag).toHaveBeenCalledWith(
         150, // 100 + 100/2
@@ -104,6 +104,7 @@ describe('MirroringService', () => {
         150, // 100 + 100/2
         500, // 200 + 600/2
         500,
+        SwipeEasing.EaseOut,
       );
     });
   });
