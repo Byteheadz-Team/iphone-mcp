@@ -1,13 +1,10 @@
+import { Module } from '@lib/utils';
 import { McpServerModule } from '@mcp/server';
 import { DeviceService } from '@services/device/device.service';
 import { MirroringService } from '@services/mirroring/mirroring.service';
+import config from '~/config';
 
-import config from './config';
-import { createLogger } from './log';
-import { type Module } from './types';
-
-export class AppContainer {
-  private log = createLogger('AppContainer');
+export class AppContainer extends Module {
   private modules: Module[] = [];
 
   readonly deviceService: DeviceService;
@@ -15,6 +12,7 @@ export class AppContainer {
   readonly mcpServer: McpServerModule;
 
   constructor() {
+    super();
     this.log.info('Initializing container');
 
     this.deviceService = new DeviceService(config.usbmux.socketPath);
@@ -27,21 +25,21 @@ export class AppContainer {
     this.modules = [this.deviceService, this.mirroringService, this.mcpServer];
   }
 
-  async start(): Promise<void> {
+  override async start(): Promise<void> {
     this.log.info('Starting all modules');
     for (const mod of this.modules) {
       await mod.start();
     }
-    this.log.info('All modules started');
+    await super.start();
   }
 
-  async stop(): Promise<void> {
+  override async stop(): Promise<void> {
     this.log.info('Stopping all modules');
     for (const mod of [...this.modules].reverse()) {
       if (mod.started) {
         await mod.stop();
       }
     }
-    this.log.info('All modules stopped');
+    await super.stop();
   }
 }

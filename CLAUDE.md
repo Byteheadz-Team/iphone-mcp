@@ -17,7 +17,7 @@ Run a single test file: `yarn vitest run src/path/to/file.test.ts`
 ## Code style
 
 - ESM only (`import`/`export`, never `require`). No `.js` extensions on imports.
-- Path aliases for cross-layer imports: `@src/*`, `@lib/*`, `@services/*`, `@mcp/*`. Relative imports (extensionless) for siblings/parents within the same module.
+- Path aliases for cross-layer imports: `~/*`, `@lib/*`, `@services/*`, `@mcp/*`. Relative imports (extensionless) for siblings/parents within the same module.
 - Strict TypeScript — `no-explicit-any` is an error. Use `unknown` and narrow.
 - `type` imports must use inline syntax: `import { type Foo } from '@lib/bar'`
 - Import order enforced by eslint: builtins, externals, internals (aliases), parent, sibling — with blank lines between groups, alphabetized.

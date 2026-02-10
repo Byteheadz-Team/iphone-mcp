@@ -3,8 +3,8 @@ import { type Socket } from 'node:net';
 import { LockdownClient } from '@lib/lockdown/lockdown-client';
 import { LOCKDOWN_PORT } from '@lib/lockdown/types';
 import { UsbmuxClient } from '@lib/usbmux/usbmux-client';
-import config from '@src/config';
-import { Module } from '@src/types';
+import { Module } from '@lib/utils';
+import config from '~/config';
 
 import {
   type AttachedDevice,

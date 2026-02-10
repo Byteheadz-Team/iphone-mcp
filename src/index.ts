@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 
-import { AppContainer } from './container';
-import { createLogger } from './log';
+import { createLogger } from '@lib/utils';
+
+import { AppContainer } from './app-container';
 
 const log = createLogger('main');
-const container = new AppContainer();
+const appContainer = new AppContainer();
 
 async function shutdown(): Promise<void> {
   log.info('Shutting down...');
-  await container.stop();
+  await appContainer.stop();
   process.exit(0);
 }
 
@@ -25,5 +26,5 @@ process.on('unhandledRejection', (reason) => {
   void shutdown();
 });
 
-await container.start();
+await appContainer.start();
 log.info('iPhone MCP server is running');

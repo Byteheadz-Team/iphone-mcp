@@ -1,9 +1,8 @@
 import { execFile as execFileCb, type ChildProcess } from 'node:child_process';
 
 import { MirroringClient, type WindowInfo } from '@lib/mirroring';
-import { execFile } from '@lib/utils';
-import config from '@src/config';
-import { Module } from '@src/types';
+import { Module, execFile } from '@lib/utils';
+import config from '~/config';
 
 import { type ButtonName, SwipeEasing } from './mirroring.types';
 

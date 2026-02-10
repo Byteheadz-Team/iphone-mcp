@@ -15,10 +15,11 @@
     "rootDir": "src",
     "baseUrl": ".",
     "paths": {
-      "@src/*": ["src/*"],
+      "~/*": ["src/*"],
       "@lib/*": ["src/lib/*"],
       "@services/*": ["src/services/*"],
-      "@mcp/*": ["src/mcp/*"]
+      "@mcp/*": ["src/mcp/*"],
+      "@utils/*": ["src/utils/*"]
     }
   },
   "include": ["src/**/*"],

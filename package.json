@@ -5,20 +5,20 @@
   "type": "module",
   "packageManager": "yarn@4.12.0",
   "license": "MIT",
-  "author": "yev",
-  "homepage": "https://github.com/yev/iphone-mcp#readme",
+  "author": "Yev Spektor <code@yevspektor.com>",
+  "homepage": "https://github.com/yev-yev-yev/iphone-mcp#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yev/iphone-mcp.git"
+    "url": "https://github.com/yev-yev-yev/iphone-mcp.git"
   },
   "bugs": {
     "url": "https://github.com/yev/iphone-mcp/issues"
   },
   "keywords": [
+    "iphone",
     "mcp",
     "mcp-server",
     "model-context-protocol",
-    "iphone",
     "ios",
     "iphone-mirroring",
     "automation",
@@ -47,7 +47,8 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "check": "prettier --write . && eslint --cache --fix . && tsc --noEmit",
-    "doctor": "tsx src/doctor.ts",
+    "doctor": "tsx src/scripts/doctor.ts",
+    "screenshot": "tsx src/scripts/screenshot.ts",
     "prepare": "husky",
     "prepublishOnly": "yarn build"
   },

@@ -62,7 +62,7 @@ export default tseslint.config(
           ],
           pathGroups: [
             {
-              pattern: '@src/**',
+              pattern: '~/**',
               group: 'internal',
             },
             {

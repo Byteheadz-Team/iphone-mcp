@@ -2,10 +2,10 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
 import { buildGridInstructions } from '@lib/mirroring';
+import { Module } from '@lib/utils';
 import { type DeviceService } from '@services/device/device.service';
 import { type MirroringService } from '@services/mirroring/mirroring.service';
-import config from '@src/config';
-import { Module } from '@src/types';
+import config from '~/config';
 
 import { registerAutomationTools } from './tools/automation-tools';
 import { registerDeviceTools } from './tools/device-tools';
@@ -34,7 +34,10 @@ export class McpServerModule extends Module {
           'Always take a screenshot before performing any action to ensure you have an up-to-date view of the screen.',
           'Always use the type_text tool to enter text. Do not wait for the on-screen keyboard to appear — it will not be visible in screenshots, but type_text will still work.',
           'Always use the calculate tool for any arithmetic or coordinate math — never calculate mentally. This includes computing midpoints, offsets, distances, and any other numeric operations.',
-          buildGridInstructions(config.mirroring.overlayGridSpacing, config.mirroring.overlayGridPadding),
+          buildGridInstructions(
+            config.mirroring.overlayGridSpacing,
+            config.mirroring.overlayGridPadding,
+          ),
         ].join('\n'),
       },
     );

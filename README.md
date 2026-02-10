@@ -252,6 +252,18 @@ Configuration is via environment variables:
 - Unplug the iPhone, re-plug, tap "Trust This Computer?" again
 - Check pairing records exist: `ls /var/db/lockdown/`
 
+## Disclaimer
+
+This software enables AI-driven control of a physical iPhone. By using it, you acknowledge and agree that:
+
+- **You are solely responsible** for all actions performed through this tool, whether initiated manually or autonomously by an AI agent.
+- **Unintended actions may occur** AI models can misinterpret screen content, tap wrong targets, send unintended messages, delete data, make purchases, or perform other irreversible actions on your device. The author is not responsible for any such outcomes.
+- **You assume all risk** associated with granting an automated system control over your device, including but not limited to data loss, unintended communications, financial transactions, privacy breaches, and account modifications.
+- **This software is not designed for unsupervised use** You should monitor all AI-initiated actions and be prepared to disconnect your device at any time.
+- **Do not use this software for malicious purposes**, including unauthorized access to devices, surveillance, harassment, fraud, or any activity that violates applicable laws.
+
+THE AUTHOR DISCLAIMS ALL LIABILITY FOR ANY DAMAGES, LOSSES, OR CONSEQUENCES ARISING FROM THE USE OR MISUSE OF THIS SOFTWARE. USE AT YOUR OWN RISK.
+
 ## License
 
 MIT

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { type MirroringClient, SwipeEasing } from '@lib/mirroring';
-import config from '@src/config';
+import config from '~/config';
 
 import { MirroringService } from '../mirroring.service';
 
