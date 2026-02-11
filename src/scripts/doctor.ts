@@ -116,19 +116,6 @@ async function checkIPhoneMirroringApp(): Promise<void> {
   }
 }
 
-async function checkUsbmuxd(): Promise<void> {
-  const socketPath = '/var/run/usbmuxd';
-  try {
-    await access(socketPath);
-    pass('usbmuxd socket exists');
-  } catch {
-    fail(
-      'usbmuxd socket not found at /var/run/usbmuxd',
-      'usbmuxd is a macOS system daemon — it should exist automatically',
-    );
-  }
-}
-
 async function checkConnectedDevice(): Promise<void> {
   try {
     const { stdout } = await execFile('system_profiler', ['SPUSBDataType']);
@@ -207,7 +194,6 @@ async function main(): Promise<void> {
 
   console.log('Dependencies:');
   await checkIPhoneMirroringApp();
-  await checkUsbmuxd();
   console.log();
 
   console.log('Device:');

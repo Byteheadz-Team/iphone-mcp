@@ -25,4 +25,19 @@ export function registerScreenshotTools(
       };
     },
   );
+
+  server.registerTool(
+    'get_screen_info',
+    {
+      description:
+        'Get screen dimensions and scale factor of the iPhone Mirroring window',
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    },
+    async () => {
+      const screenInfo = await mirroringService.getScreenInfo();
+      return {
+        content: [{ type: 'text', text: JSON.stringify(screenInfo, null, 2) }],
+      };
+    },
+  );
 }

@@ -3,19 +3,16 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 
 import { buildGridInstructions } from '@lib/mirroring';
 import { Module } from '@lib/utils';
-import { type DeviceService } from '@services/device/device.service';
 import { type MirroringService } from '@services/mirroring/mirroring.service';
 import config from '~/config';
 
 import { registerAutomationTools } from './tools/automation-tools';
 import { registerCoordinateTools } from './tools/coordinate-tools';
-import { registerDeviceTools } from './tools/device-tools';
 import { registerMathTools } from './tools/math-tools';
 import { registerMirroringControlTools } from './tools/mirroring-control-tools';
 import { registerScreenshotTools } from './tools/screenshot-tools';
 
 export interface McpServerDependencies {
-  deviceService: DeviceService;
   mirroringService: MirroringService;
 }
 
@@ -46,18 +43,9 @@ export class McpServerModule extends Module {
   }
 
   private registerTools(): void {
-    registerDeviceTools(
-      this.server,
-      this.deps.deviceService,
-      this.deps.mirroringService,
-    );
     registerScreenshotTools(this.server, this.deps.mirroringService);
     registerAutomationTools(this.server, this.deps.mirroringService);
-    registerMirroringControlTools(
-      this.server,
-      this.deps.mirroringService,
-      this.deps.deviceService,
-    );
+    registerMirroringControlTools(this.server, this.deps.mirroringService);
     registerMathTools(this.server);
     registerCoordinateTools(this.server);
   }

@@ -39,9 +39,6 @@ const config = {
   logging: {
     level: getLogLevel(),
   },
-  usbmux: {
-    socketPath: process.env.USBMUX_SOCKET_PATH ?? '/var/run/usbmuxd',
-  },
   mirroring: {
     appName: 'iPhone Mirroring',
     launchTimeoutMs: 10_000,

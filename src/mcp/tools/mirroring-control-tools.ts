@@ -1,7 +1,6 @@
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 
-import { type DeviceService } from '@services/device/device.service';
 import { type MirroringService } from '@services/mirroring/mirroring.service';
 
 import { screenshotDelaySchema, withScreenshotAfter } from './screenshot-after';
@@ -9,7 +8,6 @@ import { screenshotDelaySchema, withScreenshotAfter } from './screenshot-after';
 export function registerMirroringControlTools(
   server: McpServer,
   mirroringService: MirroringService,
-  deviceService: DeviceService,
 ): void {
   server.registerTool(
     'get_clipboard',
@@ -41,26 +39,6 @@ export function registerMirroringControlTools(
       return withScreenshotAfter(mirroringService, screenshotDelay, [
         { type: 'text', text: 'Clipboard content set' },
       ]);
-    },
-  );
-
-  server.registerTool(
-    'get_battery_info',
-    {
-      description:
-        'Get the battery level and charging state of the connected device',
-      annotations: { readOnlyHint: true, openWorldHint: false },
-    },
-    async () => {
-      const battery = await deviceService.getBatteryInfo();
-      return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify(battery, null, 2),
-          },
-        ],
-      };
     },
   );
 }

@@ -4,7 +4,7 @@
 
 Creates an `McpServer` from `@modelcontextprotocol/sdk` with `StdioServerTransport`. Tool registration happens in the constructor — each tool file exports a `register*Tools()` function that takes the server and relevant service dependencies.
 
-Dependencies: `DeviceService`, `MirroringService`.
+Dependencies: `MirroringService`.
 
 ## tools/
 
@@ -14,10 +14,9 @@ Error responses set `isError: true` in the return value rather than throwing —
 
 Files:
 
-- `device-tools.ts` — `list_devices`, `device_info`, `get_screen_info`. Depends on `DeviceService` and `MirroringService` (for `get_screen_info`).
-- `screenshot-tools.ts` — `screenshot`
+- `screenshot-tools.ts` — `screenshot`, `get_screen_info`. Depends on `MirroringService`.
 - `automation-tools.ts` — `tap`, `long_press`, `swipe`, `type_text`, `press_button`. `press_button` accepts `"home"`, `"app_switcher"`, and `"spotlight"`.
-- `mirroring-control-tools.ts` — `get_clipboard`, `set_clipboard`, `get_battery_info`. Depends on `MirroringService` and `DeviceService` (for `get_battery_info`).
+- `mirroring-control-tools.ts` — `get_clipboard`, `set_clipboard`. Depends on `MirroringService`.
 - `math-tools.ts` — `calculate`. Safe expression evaluator (recursive descent parser, no `eval`). Supports `+`, `-`, `*`, `/`, `%`, parentheses, and functions (`round`, `floor`, `ceil`, `abs`, `sqrt`, `pow`, `min`, `max`). No service dependencies. For general arithmetic only — coordinate math should use `get_coordinates` instead.
 - `coordinate-tools.ts` — `get_coordinates`. Converts grid labels (column/row) and percentage offsets to exact pixel coordinates for `tap`/`swipe`/`long_press`. Pure computation, no service dependencies. Reads `overlayGridSpacing` and `overlayGridPadding` from config. Accepts `column`, `row`, `xPercent`, `yPercent` — percentage fields accept numbers or strings (trailing `%` stripped).
 - `screenshot-after.ts` — shared `withScreenshotAfter()` helper and `screenshotDelaySchema`. Action tools use this to optionally return a screenshot after the action by accepting a `screenshotDelay` parameter.

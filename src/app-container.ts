@@ -1,13 +1,10 @@
 import { Module } from '@lib/utils';
 import { McpServerModule } from '@mcp/server';
-import { DeviceService } from '@services/device/device.service';
 import { MirroringService } from '@services/mirroring/mirroring.service';
-import config from '~/config';
 
 export class AppContainer extends Module {
   private modules: Module[] = [];
 
-  readonly deviceService: DeviceService;
   readonly mirroringService: MirroringService;
   readonly mcpServer: McpServerModule;
 
@@ -15,14 +12,12 @@ export class AppContainer extends Module {
     super();
     this.log.info('Initializing container');
 
-    this.deviceService = new DeviceService(config.usbmux.socketPath);
     this.mirroringService = new MirroringService();
     this.mcpServer = new McpServerModule({
-      deviceService: this.deviceService,
       mirroringService: this.mirroringService,
     });
 
-    this.modules = [this.deviceService, this.mirroringService, this.mcpServer];
+    this.modules = [this.mirroringService, this.mcpServer];
   }
 
   override async start(): Promise<void> {
