@@ -177,7 +177,7 @@ $.CGEventPost($.kCGHIDEventTap, mouseUp);
     endX: number,
     endY: number,
     durationMs: number,
-    easing: SwipeEasing = SwipeEasing.EaseOut,
+    easing: SwipeEasing = SwipeEasing.Linear,
   ): Promise<void> {
     await this.activate();
 
@@ -208,6 +208,7 @@ function ease(t) {
 const startPoint = $.CGPointMake(startX, startY);
 const mouseDown = $.CGEventCreateMouseEvent(null, $.kCGEventLeftMouseDown, startPoint, $.kCGMouseButtonLeft);
 $.CGEventPost($.kCGHIDEventTap, mouseDown);
+delay(0.03);
 
 for (let i = 1; i <= steps; i++) {
   const t = ease(i / steps);

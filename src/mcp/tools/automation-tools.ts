@@ -61,7 +61,7 @@ export function registerAutomationTools(
     'swipe',
     {
       description:
-        'Swipe on the screen between two points. Take a screenshot first to confirm the current screen state. Swiping up from the bottom edge will NOT go to the home screen — use the press_button tool with button "home" instead.',
+        'Swipe on the screen between two points. Take a screenshot first to confirm the current screen state. Swiping up from the bottom edge will NOT go to the home screen — use the press_button tool with button "home" instead. IMPORTANT: Start and end swipes in empty areas between UI elements, not directly on icons or buttons (to avoid triggering edit/jiggle mode or unintended taps). For home screen page swiping, start from empty space between icon rows. For list scrolling, use the center of the content area.',
       inputSchema: {
         startX: z
           .number()
@@ -79,7 +79,7 @@ export function registerAutomationTools(
           .nativeEnum(SwipeEasing)
           .optional()
           .describe(
-            'Speed curve. ease-out (default): natural deceleration — best for scrolling, pulling down to refresh, and most swipes. ease-in: accelerating flick — best for dismissing cards, throwing items, or fling-to-delete. ease-in-out: slow start and end — best for precise repositioning like reordering a list or moving a slider. linear: constant speed — rarely needed, use for mechanical drags like adjusting a map.',
+            'Speed curve. linear (default): constant speed — best for scrolling, page swipes, and most gestures. Maintains velocity through release so iOS applies natural momentum after finger lift. ease-in: accelerating — best for dismissing cards, fling-to-delete, or any gesture wanting maximum momentum. Velocity at release is 3× average velocity. ease-out: decelerating to a stop — for precise drag-and-drop where you need to place something at an exact position. Kills momentum (velocity → 0 at release). Do NOT use for scrolling. ease-in-out: slow start and end — for precise repositioning like reordering lists or adjusting sliders. Also kills momentum at release.',
           ),
         screenshotDelay: screenshotDelaySchema,
       },

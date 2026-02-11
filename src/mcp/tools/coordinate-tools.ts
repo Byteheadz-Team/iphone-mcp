@@ -5,7 +5,9 @@ import config from '~/config';
 
 const percentSchema = z
   .union([z.number(), z.string()])
-  .describe('Percentage offset (0–100). Accepts a number or a string (trailing "%" is stripped).');
+  .describe(
+    'Percentage offset (0–100). Accepts a number or a string (trailing "%" is stripped).',
+  );
 
 function parsePercent(value: number | string): number {
   const str = String(value).replace(/%$/, '').trim();
@@ -21,11 +23,15 @@ function parsePercent(value: number | string): number {
 
 function labelToIndex(label: string): number {
   if (label.length !== 1) {
-    throw new Error(`Grid label must be a single letter A–Z, got ${JSON.stringify(label)}`);
+    throw new Error(
+      `Grid label must be a single letter A–Z, got ${JSON.stringify(label)}`,
+    );
   }
   const code = label.toUpperCase().charCodeAt(0);
   if (code < 65 || code > 90) {
-    throw new Error(`Grid label must be a letter A–Z, got ${JSON.stringify(label)}`);
+    throw new Error(
+      `Grid label must be a letter A–Z, got ${JSON.stringify(label)}`,
+    );
   }
   return code - 64; // A=1, B=2, ...
 }
@@ -35,7 +41,8 @@ function labelPixel(index: number, padding: number, spacing: number): number {
 }
 
 export function registerCoordinateTools(server: McpServer): void {
-  const { overlayGridSpacing: spacing, overlayGridPadding: padding } = config.mirroring;
+  const { overlayGridSpacing: spacing, overlayGridPadding: padding } =
+    config.mirroring;
 
   server.registerTool(
     'get_coordinates',
@@ -45,7 +52,9 @@ export function registerCoordinateTools(server: McpServer): void {
       inputSchema: {
         column: z
           .string()
-          .describe('Grid column letter nearest to the LEFT of the target (e.g. "B")'),
+          .describe(
+            'Grid column letter nearest to the LEFT of the target (e.g. "B")',
+          ),
         row: z
           .string()
           .describe('Grid row letter nearest ABOVE the target (e.g. "D")'),
@@ -68,8 +77,12 @@ export function registerCoordinateTools(server: McpServer): void {
         const xPct = parsePercent(xPercent);
         const yPct = parsePercent(yPercent);
 
-        const x = Math.round(labelPixel(colIndex, padding, spacing) + (xPct / 100) * spacing);
-        const y = Math.round(labelPixel(rowIndex, padding, spacing) + (yPct / 100) * spacing);
+        const x = Math.round(
+          labelPixel(colIndex, padding, spacing) + (xPct / 100) * spacing,
+        );
+        const y = Math.round(
+          labelPixel(rowIndex, padding, spacing) + (yPct / 100) * spacing,
+        );
 
         return {
           content: [{ type: 'text' as const, text: JSON.stringify({ x, y }) }],

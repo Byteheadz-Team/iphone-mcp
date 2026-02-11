@@ -173,15 +173,25 @@ describe('MirroringClient', () => {
       expect(dragScript).toContain('kCGEventLeftMouseUp');
     });
 
-    it('defaults to ease-out easing', async () => {
+    it('defaults to linear easing', async () => {
       const mock = mockExecFileSequence(['', '']);
 
       const client = new MirroringClient();
       await client.postDrag(0, 0, 0, 100, 500);
 
       const dragScript = getCallScript(mock, 1);
-      expect(dragScript).toContain("const easing = 'ease-out'");
+      expect(dragScript).toContain("const easing = 'linear'");
       expect(dragScript).toContain('function ease(t)');
+    });
+
+    it('includes initial dwell delay after mouse-down', async () => {
+      const mock = mockExecFileSequence(['', '']);
+
+      const client = new MirroringClient();
+      await client.postDrag(0, 0, 0, 100, 500);
+
+      const dragScript = getCallScript(mock, 1);
+      expect(dragScript).toContain('delay(0.03)');
     });
 
     it('uses the specified easing in the JXA script', async () => {

@@ -144,13 +144,13 @@ Runs the server with `tsx watch` for automatic restarts on file changes.
 
 ### UI Automation
 
-| Tool           | Description                                             | Parameters                                                                     |
-| -------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `tap`          | Tap at coordinates (in screenshot pixels)               | `x`, `y`, `screenshotDelay?`                                                   |
-| `long_press`   | Press and hold at coordinates for a duration            | `x`, `y`, `duration` (seconds), `screenshotDelay?`                             |
-| `swipe`        | Swipe between two points with optional easing           | `startX`, `startY`, `endX`, `endY`, `duration?`, `easing?`, `screenshotDelay?` |
-| `type_text`    | Type text into the focused input field                  | `text`, `screenshotDelay?`                                                     |
-| `press_button` | Press a device button (home, app_switcher, spotlight)   | `button`, `screenshotDelay?`                                                   |
+| Tool           | Description                                           | Parameters                                                                     |
+| -------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `tap`          | Tap at coordinates (in screenshot pixels)             | `x`, `y`, `screenshotDelay?`                                                   |
+| `long_press`   | Press and hold at coordinates for a duration          | `x`, `y`, `duration` (seconds), `screenshotDelay?`                             |
+| `swipe`        | Swipe between two points with optional easing         | `startX`, `startY`, `endX`, `endY`, `duration?`, `easing?`, `screenshotDelay?` |
+| `type_text`    | Type text into the focused input field                | `text`, `screenshotDelay?`                                                     |
+| `press_button` | Press a device button (home, app_switcher, spotlight) | `button`, `screenshotDelay?`                                                   |
 
 ### Device Control
 
@@ -198,28 +198,28 @@ The result: the AI goes from "somewhere around the middle of the screen" to "bet
 
 ## Scripts
 
-| Command           | Description                                            |
-| ----------------- | ------------------------------------------------------ |
-| `yarn build`      | Bundle with tsup to `dist/`                            |
-| `yarn start`      | Run the compiled server                                |
-| `yarn dev`        | Run with auto-restart on changes                       |
-| `yarn doctor`     | Preflight check (macOS, permissions, device)           |
-| `yarn screenshot` | Capture iPhone screen with grid overlay, save to `./`  |
-| `yarn test`       | Run all tests                                          |
-| `yarn typecheck`  | Type-check without emitting                            |
-| `yarn lint`       | Lint with ESLint                                       |
-| `yarn format`     | Format with Prettier                                   |
-| `yarn check`      | Format + lint fix + typecheck                          |
+| Command           | Description                                           |
+| ----------------- | ----------------------------------------------------- |
+| `yarn build`      | Bundle with tsup to `dist/`                           |
+| `yarn start`      | Run the compiled server                               |
+| `yarn dev`        | Run with auto-restart on changes                      |
+| `yarn doctor`     | Preflight check (macOS, permissions, device)          |
+| `yarn screenshot` | Capture iPhone screen with grid overlay, save to `./` |
+| `yarn test`       | Run all tests                                         |
+| `yarn typecheck`  | Type-check without emitting                           |
+| `yarn lint`       | Lint with ESLint                                      |
+| `yarn format`     | Format with Prettier                                  |
+| `yarn check`      | Format + lint fix + typecheck                         |
 
 ## Configuration
 
 Configuration is via environment variables:
 
-| Variable             | Default            | Description                                   |
-| -------------------- | ------------------ | --------------------------------------------- |
-| `APP_ENV`            | `local`            | Environment (`test`, `local`, `dev`, `prod`)  |
+| Variable             | Default            | Description                                            |
+| -------------------- | ------------------ | ------------------------------------------------------ |
+| `APP_ENV`            | `local`            | Environment (`test`, `local`, `dev`, `prod`)           |
 | `LOG_LEVEL`          | `info`             | Log level (`debug`, `info`, `warn`, `error`, `silent`) |
-| `USBMUX_SOCKET_PATH` | `/var/run/usbmuxd` | Path to usbmuxd socket                        |
+| `USBMUX_SOCKET_PATH` | `/var/run/usbmuxd` | Path to usbmuxd socket                                 |
 
 ## Troubleshooting
 

@@ -107,7 +107,7 @@ describe('MirroringService', () => {
       await service.start();
 
       const p = config.mirroring.overlayGridPadding;
-      await service.swipe(100, 200, 100, 600, 500, SwipeEasing.EaseOut);
+      await service.swipe(100, 200, 100, 600, 500, SwipeEasing.Linear);
 
       expect(mock.postDrag).toHaveBeenCalledWith(
         100 + (100 - p) / 2,
@@ -115,7 +115,7 @@ describe('MirroringService', () => {
         100 + (100 - p) / 2,
         200 + (600 - p) / 2,
         500,
-        SwipeEasing.EaseOut,
+        SwipeEasing.Linear,
       );
     });
   });
@@ -130,7 +130,6 @@ describe('MirroringService', () => {
 
       expect(mock.sendShortcut).toHaveBeenCalledWith('1');
     });
-
   });
 
   describe('getScreenInfo', () => {

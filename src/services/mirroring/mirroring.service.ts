@@ -107,7 +107,7 @@ export class MirroringService extends Module {
       end.x,
       end.y,
       duration ?? 500,
-      easing ?? SwipeEasing.EaseOut,
+      easing ?? SwipeEasing.Linear,
     );
   }
 
@@ -117,9 +117,9 @@ export class MirroringService extends Module {
 
   async pressButton(button: ButtonName): Promise<void> {
     const shortcuts: Record<ButtonName, string> = {
-      home: '1',          // ⌘1
-      app_switcher: '2',  // ⌘2
-      spotlight: '3',     // ⌘3
+      home: '1', // ⌘1
+      app_switcher: '2', // ⌘2
+      spotlight: '3', // ⌘3
     };
     await this.client.sendShortcut(shortcuts[button]);
   }
