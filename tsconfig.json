@@ -18,8 +18,7 @@
       "~/*": ["src/*"],
       "@lib/*": ["src/lib/*"],
       "@services/*": ["src/services/*"],
-      "@mcp/*": ["src/mcp/*"],
-      "@utils/*": ["src/utils/*"]
+      "@mcp/*": ["src/mcp/*"]
     }
   },
   "include": ["src/**/*"],

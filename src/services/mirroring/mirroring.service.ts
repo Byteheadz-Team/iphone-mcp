@@ -1,10 +1,14 @@
 import { execFile as execFileCb, type ChildProcess } from 'node:child_process';
 
+import { z } from 'zod';
+
 import { MirroringClient, type WindowInfo } from '@lib/mirroring';
 import { Module, execFile } from '@lib/utils';
 import config from '~/config';
 
 import { type ButtonName, SwipeEasing } from './mirroring.types';
+
+const coordinateSchema = z.number().finite();
 
 const SCALE = config.mirroring.screenshotScale;
 const GRID_SPACING = config.mirroring.overlayGridSpacing;
@@ -111,15 +115,8 @@ export class MirroringService extends Module {
     await this.client.typeText(text);
   }
 
-  async pressButton(button: ButtonName): Promise<void> {
-    if (button === 'home') {
-      await this.client.sendShortcut('1'); // ⌘1 = Home Screen
-      return;
-    }
-
-    throw new Error(
-      `Button "${button}" is not supported via iPhone Mirroring. Only "home" is available.`,
-    );
+  async pressButton(_button: ButtonName): Promise<void> {
+    await this.client.sendShortcut('1'); // ⌘1 = Home Screen
   }
 
   async getScreenInfo(): Promise<ScreenInfo> {
@@ -165,6 +162,9 @@ export class MirroringService extends Module {
     pixelX: number,
     pixelY: number,
   ): { x: number; y: number } {
+    coordinateSchema.parse(pixelX);
+    coordinateSchema.parse(pixelY);
+
     return {
       x: info.x + (pixelX - COORD_OFFSET) / SCALE,
       y: info.y + (pixelY - COORD_OFFSET) / SCALE,

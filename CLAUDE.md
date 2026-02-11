@@ -11,6 +11,7 @@ MCP server that controls a physical iPhone via macOS iPhone Mirroring. See @READ
 - `yarn lint` — eslint with cache
 - `yarn check` — format + lint fix + typecheck (run before committing)
 - `yarn doctor` — preflight check (macOS version, permissions, device detection)
+- `yarn screenshot` — capture iPhone screen with grid overlay, save to current directory
 
 Run a single test file: `yarn vitest run src/path/to/file.test.ts`
 
@@ -26,15 +27,15 @@ Run a single test file: `yarn vitest run src/path/to/file.test.ts`
 
 ## Architecture
 
-Three layers — `lib/` (protocols) → `services/` (domain) → `mcp/` (tools). All services extend the `Module` base class in `src/types.ts` which provides `start()`/`stop()` lifecycle and a scoped logger.
+Three layers — `lib/` (protocols) → `services/` (domain) → `mcp/` (tools). All services extend the `Module` base class in `src/lib/utils/module.ts` which provides `start()`/`stop()` lifecycle and a scoped logger.
 
 Dependencies flow one direction: mcp → services → lib. Never import upward.
 
-`src/container.ts` wires everything via constructor injection (no DI framework). Modules start in order, stop in reverse.
+`src/app-container.ts` wires everything via constructor injection (no DI framework). Modules start in order, stop in reverse.
 
 Build uses `tsup` (esbuild) which bundles everything into a single `dist/index.js`. Path aliases from `tsconfig.json` are resolved at build time. `moduleResolution: "bundler"` allows extensionless imports.
 
-`src/lib/utils/index.ts` exports a shared promisified `execFile` — import from `@lib/utils` instead of duplicating `promisify(execFileCb)` in each file.
+`src/lib/utils/index.ts` exports a shared promisified `execFile`, the `Module` base class, and `createLogger` — import from `@lib/utils`.
 
 ## iPhone communication
 
@@ -56,7 +57,7 @@ Two channels to the iPhone:
 - `Module.start()` and `Module.stop()` return `Promise<void> | void` — always `await` them to avoid `@typescript-eslint/no-floating-promises`.
 - Plist `PlistDict` values are `PlistValue`, not `PlistValue | undefined` — interfaces extending it can't have optional properties of plist types.
 - usbmuxd port encoding is byte-swapped: `((port & 0xff) << 8) | ((port >> 8) & 0xff)`.
-- Coordinate mapping: screenshots are captured at 2x resolution (configurable via `config.mirroring.screenshotScale`), then a grid overlay is composited via `sharp` (SVG over the image). The grid adds a black margin (`config.mirroring.overlayGridPadding`, default 40px) around the screenshot with labeled reference lines every `config.mirroring.overlayGridSpacing` (default 80px). The AI sends coordinates in the padded image space; `MirroringService.toScreenCoords()` subtracts the padding offset and divides by the scale factor: `screen_x = window.x + (pixel_x - gridPadding) / scale`.
+- Coordinate mapping: screenshots are captured at 2x resolution (configurable via `config.mirroring.screenshotScale`), then a grid overlay is composited via `sharp` (SVG over the image). The grid adds a black margin (`config.mirroring.overlayGridPadding`) on the top and left of the screenshot with labeled reference lines every `config.mirroring.overlayGridSpacing` pixels. The AI sends coordinates in the padded image space; `MirroringService.toScreenCoords()` subtracts the padding offset and divides by the scale factor: `screen_x = window.x + (pixel_x - COORD_OFFSET) / scale`. `COORD_OFFSET` equals `overlayGridPadding` when `overlayGridSpacing` is non-zero, otherwise 0.
 - The screenshot output includes the window title bar. Coordinates the AI provides from the screenshot already account for it.
 - `sharp` is the only native npm dependency. It's marked `external` in `tsup.config.ts` so it's not bundled — it must be installed in `node_modules` at runtime. Ships prebuilt binaries for macOS arm64/x64.
 - `MirroringClient` activates the iPhone Mirroring window before every input event (click, drag, type). Without this, `CGEvent` posts may be silently ignored if the window isn't frontmost.

@@ -29,14 +29,14 @@ That's it. Ask Claude to "take a screenshot of my iPhone" to verify it works.
 MCP Client  ──stdio──>  iphone-mcp  ──usbmuxd──>  iPhone (device info, battery)
                               │
                               └── iPhone Mirroring window (screenshots, tap, swipe, type)
-                                    ├── screencapture + sips (1x PNG screenshot)
+                                    ├── screencapture + sips (2x PNG screenshot)
                                     ├── CGEvent injection (clicks, drags)
                                     └── AppleScript keystroke (text input)
 ```
 
 **iPhone Mirroring** is a macOS Sequoia app that mirrors your iPhone's screen to a macOS window. This server programmatically interacts with that window:
 
-- **Screenshots** via `screencapture` + `sips` -- captures the mirroring window as PNG, downscaled to 1x resolution
+- **Screenshots** via `screencapture` + `sips` -- captures the mirroring window as PNG, resampled to 2x resolution
 - **Taps & swipes** via `CGEvent` (JXA/osascript) -- injects mouse events at the right screen coordinates
 - **Text input** via AppleScript `keystroke` -- types into whatever field is focused
 
@@ -179,7 +179,7 @@ Raw vision-based coordinate estimation is the Achilles' heel of every multimodal
 │  margin    A     B     C     D   │  <- column labels (X axis)
 │         ┌─────────────────────┐  │
 │  A ─────│─ ─ ─ ─ ─ ─ ─ ─ ─ ─│  │  <- labeled reference lines
-│         │                     │  │     every 80px
+│         │                     │  │     at fixed intervals
 │  B ─────│─ ─ ─ ─ ─ ─ ─ ─ ─ ─│  │
 │         │    iPhone screen    │  │
 │  C ─────│─ ─ ─ ─ ─ ─ ─ ─ ─ ─│  │
@@ -191,23 +191,24 @@ Raw vision-based coordinate estimation is the Achilles' heel of every multimodal
    row labels (Y axis)
 ```
 
-Every screenshot is wrapped in a black margin with **labeled grid lines** at fixed intervals (default 80px). The MCP server instructions tell the model the exact pixel value of each label — `A=120, B=200, C=280, ...` — giving it a spatial coordinate system it can read directly from the image instead of guessing. The model anchors its coordinate estimates to the nearest grid intersection, then uses the `calculate` tool for precise arithmetic rather than doing mental math.
+Every screenshot is wrapped in a black margin with **labeled grid lines** at fixed intervals. The MCP server instructions tell the model the exact pixel value of each label, giving it a spatial coordinate system it can read directly from the image instead of guessing. The model anchors its coordinate estimates to the nearest grid intersection, then uses the `calculate` tool for precise arithmetic rather than doing mental math.
 
-The result: the AI goes from "somewhere around the middle of the screen" to "between grid lines C and D on the X axis, right on line F on the Y axis → `calculate(280 + (360-280)/2, 520)` → tap at (320, 520)". This practically eliminates mis-taps on small targets like icons, buttons, and text fields.
+The result: the AI goes from "somewhere around the middle of the screen" to "between grid lines C and D on the X axis, right on line F on the Y axis" and uses `calculate` to compute the exact pixel coordinates. This practically eliminates mis-taps on small targets like icons, buttons, and text fields.
 
 ## Scripts
 
-| Command          | Description                                  |
-| ---------------- | -------------------------------------------- |
-| `yarn build`     | Compile TypeScript to `dist/`                |
-| `yarn start`     | Run the compiled server                      |
-| `yarn dev`       | Run with auto-restart on changes             |
-| `yarn doctor`    | Preflight check (macOS, permissions, device) |
-| `yarn test`      | Run all tests                                |
-| `yarn typecheck` | Type-check without emitting                  |
-| `yarn lint`      | Lint with ESLint                             |
-| `yarn format`    | Format with Prettier                         |
-| `yarn check`     | Format + lint fix + typecheck                |
+| Command           | Description                                            |
+| ----------------- | ------------------------------------------------------ |
+| `yarn build`      | Bundle with tsup to `dist/`                            |
+| `yarn start`      | Run the compiled server                                |
+| `yarn dev`        | Run with auto-restart on changes                       |
+| `yarn doctor`     | Preflight check (macOS, permissions, device)           |
+| `yarn screenshot` | Capture iPhone screen with grid overlay, save to `./`  |
+| `yarn test`       | Run all tests                                          |
+| `yarn typecheck`  | Type-check without emitting                            |
+| `yarn lint`       | Lint with ESLint                                       |
+| `yarn format`     | Format with Prettier                                   |
+| `yarn check`      | Format + lint fix + typecheck                          |
 
 ## Configuration
 
@@ -216,7 +217,7 @@ Configuration is via environment variables:
 | Variable             | Default            | Description                                   |
 | -------------------- | ------------------ | --------------------------------------------- |
 | `APP_ENV`            | `local`            | Environment (`test`, `local`, `dev`, `prod`)  |
-| `LOG_LEVEL`          | `info`             | Log level (`debug`, `info`, `warn`, `silent`) |
+| `LOG_LEVEL`          | `info`             | Log level (`debug`, `info`, `warn`, `error`, `silent`) |
 | `USBMUX_SOCKET_PATH` | `/var/run/usbmuxd` | Path to usbmuxd socket                        |
 
 ## Troubleshooting

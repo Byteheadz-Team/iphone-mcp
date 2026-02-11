@@ -131,15 +131,6 @@ describe('MirroringService', () => {
       expect(mock.sendShortcut).toHaveBeenCalledWith('1');
     });
 
-    it('throws for unsupported buttons', async () => {
-      const mock = createMockClient();
-      const service = new MirroringService(mock as unknown as MirroringClient);
-      await service.start();
-
-      await expect(service.pressButton('volumeUp')).rejects.toThrow(
-        'not supported via iPhone Mirroring',
-      );
-    });
   });
 
   describe('getScreenInfo', () => {

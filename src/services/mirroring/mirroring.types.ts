@@ -1,3 +1,3 @@
 export { SwipeEasing } from '@lib/mirroring';
 
-export type ButtonName = 'home' | 'volumeUp' | 'volumeDown';
+export type ButtonName = 'home';

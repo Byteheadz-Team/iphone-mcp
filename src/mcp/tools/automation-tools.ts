@@ -134,11 +134,11 @@ export function registerAutomationTools(
     'press_button',
     {
       description:
-        'Press a button on the device. Only "home" is supported (simulated via keyboard shortcut). Volume buttons are not available via iPhone Mirroring. Use this tool to go to the home screen — swiping up from the bottom edge will not work.',
+        'Go to the home screen (simulated via keyboard shortcut). Use this instead of swiping up from the bottom edge, which will not work via iPhone Mirroring.',
       inputSchema: {
         button: z
-          .enum(['home', 'volumeUp', 'volumeDown'])
-          .describe('Button to press'),
+          .enum(['home'])
+          .describe('Button to press. Only "home" is supported.'),
         screenshotDelay: screenshotDelaySchema,
       },
       annotations: { destructiveHint: false, openWorldHint: false },

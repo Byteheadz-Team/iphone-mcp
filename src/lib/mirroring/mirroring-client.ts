@@ -12,7 +12,12 @@ const LAUNCH_TIMEOUT_MS = 10_000;
 const LAUNCH_POLL_INTERVAL_MS = 500;
 
 function escapeJxaString(str: string): string {
-  return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+  return str
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r');
 }
 
 export class MirroringClient {
