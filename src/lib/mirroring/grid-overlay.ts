@@ -106,6 +106,6 @@ export function buildGridInstructions(
     `The phone screen is offset by ${padding}px from the top-left corner of the image.`,
     `Grid labels (in image pixels): ${labels.join(', ')}.`,
     'Column labels run along the top (X axis), row labels along the left (Y axis).',
-    'Use these grid labels to estimate tap/swipe coordinates accurately.',
+    'ALWAYS use the get_coordinates tool with these grid labels to determine exact pixel coordinates for any actions like tap, swipe, and long_press.',
   ].join(' ');
 }

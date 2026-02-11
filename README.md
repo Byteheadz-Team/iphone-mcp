@@ -162,9 +162,10 @@ Runs the server with `tsx watch` for automatic restarts on file changes.
 
 ### Utility
 
-| Tool        | Description                                                          | Parameters   |
-| ----------- | -------------------------------------------------------------------- | ------------ |
-| `calculate` | Evaluate a math expression (the AI uses this instead of mental math) | `expression` |
+| Tool              | Description                                                          | Parameters                              |
+| ----------------- | -------------------------------------------------------------------- | --------------------------------------- |
+| `calculate`       | Evaluate a math expression (the AI uses this instead of mental math) | `expression`                            |
+| `get_coordinates` | Convert grid labels to exact pixel coordinates for tap/swipe         | `column`, `row`, `xPercent`, `yPercent` |
 
 ### How the AI navigates
 
@@ -191,9 +192,9 @@ Raw vision-based coordinate estimation is the Achilles' heel of every multimodal
    row labels (Y axis)
 ```
 
-Every screenshot is wrapped in a black margin with **labeled grid lines** at fixed intervals. The MCP server instructions tell the model the exact pixel value of each label, giving it a spatial coordinate system it can read directly from the image instead of guessing. The model anchors its coordinate estimates to the nearest grid intersection, then uses the `calculate` tool for precise arithmetic rather than doing mental math.
+Every screenshot is wrapped in a black margin with **labeled grid lines** at fixed intervals. The MCP server instructions tell the model the exact pixel value of each label, giving it a spatial coordinate system it can read directly from the image instead of guessing. The model identifies the nearest grid labels and calls `get_coordinates` with a percentage offset to get exact pixel values deterministically.
 
-The result: the AI goes from "somewhere around the middle of the screen" to "between grid lines C and D on the X axis, right on line F on the Y axis" and uses `calculate` to compute the exact pixel coordinates. This practically eliminates mis-taps on small targets like icons, buttons, and text fields.
+The result: the AI goes from "somewhere around the middle of the screen" to "between grid lines C and D on the X axis, right on line F on the Y axis" and calls `get_coordinates` to compute the exact pixel coordinates. This practically eliminates mis-taps on small targets like icons, buttons, and text fields.
 
 ## Scripts
 

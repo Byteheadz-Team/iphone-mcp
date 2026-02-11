@@ -18,7 +18,8 @@ Files:
 - `screenshot-tools.ts` — `screenshot`
 - `automation-tools.ts` — `tap`, `long_press`, `swipe`, `type_text`, `press_button`. `press_button` accepts `"home"`, `"app_switcher"`, and `"spotlight"`.
 - `mirroring-control-tools.ts` — `get_clipboard`, `set_clipboard`, `get_battery_info`. Depends on `MirroringService` and `DeviceService` (for `get_battery_info`).
-- `math-tools.ts` — `calculate`. Safe expression evaluator (recursive descent parser, no `eval`). Supports `+`, `-`, `*`, `/`, `%`, parentheses, and functions (`round`, `floor`, `ceil`, `abs`, `sqrt`, `pow`, `min`, `max`). No service dependencies. The server instruction tells the LLM to always use this tool for arithmetic instead of calculating mentally.
+- `math-tools.ts` — `calculate`. Safe expression evaluator (recursive descent parser, no `eval`). Supports `+`, `-`, `*`, `/`, `%`, parentheses, and functions (`round`, `floor`, `ceil`, `abs`, `sqrt`, `pow`, `min`, `max`). No service dependencies. For general arithmetic only — coordinate math should use `get_coordinates` instead.
+- `coordinate-tools.ts` — `get_coordinates`. Converts grid labels (column/row) and percentage offsets to exact pixel coordinates for `tap`/`swipe`/`long_press`. Pure computation, no service dependencies. Reads `overlayGridSpacing` and `overlayGridPadding` from config. Accepts `column`, `row`, `xPercent`, `yPercent` — percentage fields accept numbers or strings (trailing `%` stripped).
 - `screenshot-after.ts` — shared `withScreenshotAfter()` helper and `screenshotDelaySchema`. Action tools use this to optionally return a screenshot after the action by accepting a `screenshotDelay` parameter.
 
 When adding a new tool:
