@@ -115,8 +115,13 @@ export class MirroringService extends Module {
     await this.client.typeText(text);
   }
 
-  async pressButton(_button: ButtonName): Promise<void> {
-    await this.client.sendShortcut('1'); // ⌘1 = Home Screen
+  async pressButton(button: ButtonName): Promise<void> {
+    const shortcuts: Record<ButtonName, string> = {
+      home: '1',          // ⌘1
+      app_switcher: '2',  // ⌘2
+      spotlight: '3',     // ⌘3
+    };
+    await this.client.sendShortcut(shortcuts[button]);
   }
 
   async getScreenInfo(): Promise<ScreenInfo> {

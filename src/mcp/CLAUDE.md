@@ -16,7 +16,7 @@ Files:
 
 - `device-tools.ts` — `list_devices`, `device_info`, `get_screen_info`. Depends on `DeviceService` and `MirroringService` (for `get_screen_info`).
 - `screenshot-tools.ts` — `screenshot`
-- `automation-tools.ts` — `tap`, `long_press`, `swipe`, `type_text`, `press_button`. Note: `press_button` only accepts `"home"`.
+- `automation-tools.ts` — `tap`, `long_press`, `swipe`, `type_text`, `press_button`. `press_button` accepts `"home"`, `"app_switcher"`, and `"spotlight"`.
 - `mirroring-control-tools.ts` — `get_clipboard`, `set_clipboard`, `get_battery_info`. Depends on `MirroringService` and `DeviceService` (for `get_battery_info`).
 - `math-tools.ts` — `calculate`. Safe expression evaluator (recursive descent parser, no `eval`). Supports `+`, `-`, `*`, `/`, `%`, parentheses, and functions (`round`, `floor`, `ceil`, `abs`, `sqrt`, `pow`, `min`, `max`). No service dependencies. The server instruction tells the LLM to always use this tool for arithmetic instead of calculating mentally.
 - `screenshot-after.ts` — shared `withScreenshotAfter()` helper and `screenshotDelaySchema`. Action tools use this to optionally return a screenshot after the action by accepting a `screenshotDelay` parameter.

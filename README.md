@@ -150,7 +150,7 @@ Runs the server with `tsx watch` for automatic restarts on file changes.
 | `long_press`   | Press and hold at coordinates for a duration            | `x`, `y`, `duration` (seconds), `screenshotDelay?`                             |
 | `swipe`        | Swipe between two points with optional easing           | `startX`, `startY`, `endX`, `endY`, `duration?`, `easing?`, `screenshotDelay?` |
 | `type_text`    | Type text into the focused input field                  | `text`, `screenshotDelay?`                                                     |
-| `press_button` | Go to the home screen (simulated via keyboard shortcut) | `button`, `screenshotDelay?`                                                   |
+| `press_button` | Press a device button (home, app_switcher, spotlight)   | `button`, `screenshotDelay?`                                                   |
 
 ### Device Control
 

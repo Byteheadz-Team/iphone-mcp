@@ -62,5 +62,5 @@ Two channels to the iPhone:
 - `sharp` is the only native npm dependency. It's marked `external` in `tsup.config.ts` so it's not bundled — it must be installed in `node_modules` at runtime. Ships prebuilt binaries for macOS arm64/x64.
 - `MirroringClient` activates the iPhone Mirroring window before every input event (click, drag, type). Without this, `CGEvent` posts may be silently ignored if the window isn't frontmost.
 - Swipes always require explicit start/end coordinates (no direction-based mode). `postDrag()` applies easing curves (default `'ease-out'`); the `SwipeEasing` type is defined in `lib/mirroring/mirroring.types.ts`.
-- Swiping up from the bottom edge does not trigger the iOS home gesture via iPhone Mirroring. Use `press_button` with `"home"` instead.
+- Swiping up from the bottom edge does not trigger the iOS home gesture via iPhone Mirroring. Use `press_button` with `"home"` instead. Other supported buttons: `"app_switcher"` (⌘2) and `"spotlight"` (⌘3).
 - The `calculate` tool uses a hand-written recursive descent parser (no `eval`). It has no service dependencies — `registerMathTools` only takes the `McpServer`. The handler is synchronous.

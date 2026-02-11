@@ -134,11 +134,13 @@ export function registerAutomationTools(
     'press_button',
     {
       description:
-        'Go to the home screen (simulated via keyboard shortcut). Use this instead of swiping up from the bottom edge, which will not work via iPhone Mirroring.',
+        'Press a device button (simulated via keyboard shortcut). Use "home" instead of swiping up from the bottom edge, which will not work via iPhone Mirroring.',
       inputSchema: {
         button: z
-          .enum(['home'])
-          .describe('Button to press. Only "home" is supported.'),
+          .enum(['home', 'app_switcher', 'spotlight'])
+          .describe(
+            'Button to press. "home" = go to home screen, "app_switcher" = open app switcher, "spotlight" = open Spotlight search.',
+          ),
         screenshotDelay: screenshotDelaySchema,
       },
       annotations: { destructiveHint: false, openWorldHint: false },
