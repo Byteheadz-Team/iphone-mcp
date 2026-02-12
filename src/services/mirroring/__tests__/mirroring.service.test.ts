@@ -27,10 +27,12 @@ function createMockClient() {
     postClick: vi.fn().mockReturnValue(resolved),
     postLongPress: vi.fn().mockReturnValue(resolved),
     postDrag: vi.fn().mockReturnValue(resolved),
+    postScroll: vi.fn().mockReturnValue(resolved),
     typeText: vi.fn().mockReturnValue(resolved),
     sendShortcut: vi.fn().mockReturnValue(resolved),
     checkAccessibilityPermission: vi.fn().mockResolvedValue(true),
     checkScreenRecordingPermission: vi.fn().mockResolvedValue(true),
+    isNaturalScrolling: vi.fn().mockResolvedValue(true),
     getHostAppName: vi.fn().mockResolvedValue('TestApp'),
   };
 }
@@ -153,8 +155,45 @@ describe('MirroringService', () => {
         startY: 200 + (200 - p) / 2,
         endX: 100 + (100 - p) / 2,
         endY: 200 + (600 - p) / 2,
-        durationMs: 500,
+        durationMs: 500 / config.mirroring.swipeSpeed,
         easing: SwipeEasing.Linear,
+      });
+    });
+  });
+
+  describe('scroll', () => {
+    it('negates deltas when natural scrolling is ON', async () => {
+      const mock = createMockClient();
+      const service = new MirroringService(mock as unknown as MirroringClient);
+      await service.start();
+
+      const p = computeGridLayout({ shortSide: 800, targetDivisions: config.mirroring.overlayGridDivisions }).padding;
+      await service.scroll({ x: 200, y: 400, deltaX: 10, deltaY: -50 });
+
+      const s = config.mirroring.scrollSpeed;
+      expect(mock.postScroll).toHaveBeenCalledWith({
+        x: 100 + (200 - p) / 2,
+        y: 200 + (400 - p) / 2,
+        deltaX: -10 * s,
+        deltaY: 50 * s,
+      });
+    });
+
+    it('preserves deltas when natural scrolling is OFF', async () => {
+      const mock = createMockClient();
+      mock.isNaturalScrolling.mockResolvedValue(false);
+      const service = new MirroringService(mock as unknown as MirroringClient);
+      await service.start();
+
+      const p = computeGridLayout({ shortSide: 800, targetDivisions: config.mirroring.overlayGridDivisions }).padding;
+      await service.scroll({ x: 200, y: 400, deltaX: 10, deltaY: -50 });
+
+      const s = config.mirroring.scrollSpeed;
+      expect(mock.postScroll).toHaveBeenCalledWith({
+        x: 100 + (200 - p) / 2,
+        y: 200 + (400 - p) / 2,
+        deltaX: 10 * s,
+        deltaY: -50 * s,
       });
     });
   });
@@ -229,18 +268,11 @@ describe('MirroringService', () => {
       );
     });
 
-    it('returns reference layout before start', () => {
+    it('throws before start', () => {
       const mock = createMockClient();
       const service = new MirroringService(mock as unknown as MirroringClient);
 
-      const layout = service.getGridLayout();
-
-      expect(layout).toEqual(
-        computeGridLayout({
-          shortSide: config.mirroring.referenceWidth,
-          targetDivisions: config.mirroring.overlayGridDivisions,
-        }),
-      );
+      expect(() => service.getGridLayout()).toThrow('Grid layout not available');
     });
   });
 

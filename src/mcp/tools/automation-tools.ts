@@ -89,7 +89,7 @@ export function registerAutomationTools(
     'swipe',
     {
       description:
-        'Swipe on the screen between two points. Take a screenshot first to confirm the current screen state. Swiping up from the bottom edge will NOT go to the home screen — use the press_button tool with button "home" instead. IMPORTANT: Start and end swipes in empty areas between UI elements, not directly on icons or buttons (to avoid triggering edit/jiggle mode or unintended taps). For home screen page swiping, start from empty space between icon rows. For list scrolling, use the center of the content area.',
+        'Swipe on the screen between two points. Best for directional gestures: switching pages, dismissing cards, pull-to-refresh, fling-to-delete, and drag-and-drop. For scrolling through content (lists, web pages, feeds), prefer the scroll tool instead — it uses trackpad-style scroll wheel events which are more reliable for content scrolling. Take a screenshot first to confirm the current screen state. Swiping up from the bottom edge will NOT go to the home screen — use the press_button tool with button "home" instead. IMPORTANT: Start and end swipes in empty areas between UI elements, not directly on icons or buttons (to avoid triggering edit/jiggle mode or unintended taps). For home screen page swiping, start from empty space between icon rows.',
       inputSchema: {
         startX: z
           .number()
@@ -136,6 +136,46 @@ export function registerAutomationTools(
           screenshotDelay,
           actionContent(
             `Swiped from (${startX}, ${startY}) to (${endX}, ${endY})`,
+          ),
+        );
+      } catch (error: unknown) {
+        return toolError(error);
+      }
+    },
+  );
+
+  server.registerTool(
+    'scroll',
+    {
+      description:
+        'Scroll content at the given coordinates using trackpad-style scroll wheel events. Use this instead of swipe for scrolling through lists, web pages, feeds, and any scrollable content — it produces smoother, more reliable results. Only requires a single point (where to scroll) plus a delta amount, so no need to calculate start/end coordinates. Use swipe instead for directional gestures like switching pages, dismissing cards, pull-to-refresh, or drag-and-drop. Take a screenshot first to confirm the current screen state. The server auto-detects the macOS "Natural scrolling" setting at startup and compensates, so positive deltaY should consistently mean "scroll down" (content moves up). However, if the content moves the wrong way after scrolling, retry with the opposite sign (negate deltaY/deltaX).',
+      inputSchema: {
+        x: z.number().describe('X coordinate to scroll at (in screenshot pixels)'),
+        y: z.number().describe('Y coordinate to scroll at (in screenshot pixels)'),
+        deltaX: z
+          .number()
+          .optional()
+          .describe(
+            'Horizontal scroll amount in pixels. Positive = scroll right, negative = scroll left. Default 0. If the content moves the wrong way, negate the value and try again.',
+          ),
+        deltaY: z
+          .number()
+          .optional()
+          .describe(
+            'Vertical scroll amount in pixels. Positive = scroll down (content moves up), negative = scroll up (content moves down). Default 0. If the content moves the wrong way, negate the value and try again.',
+          ),
+        screenshotDelay: screenshotDelaySchema,
+      },
+      annotations: { destructiveHint: false, openWorldHint: false },
+    },
+    async ({ x, y, deltaX, deltaY, screenshotDelay }) => {
+      try {
+        await mirroringService.scroll({ x, y, deltaX, deltaY });
+        return withScreenshotAfter(
+          mirroringService,
+          screenshotDelay,
+          actionContent(
+            `Scrolled at (${x}, ${y}) by deltaX=${String(deltaX ?? 0)}, deltaY=${String(deltaY ?? 0)}`,
           ),
         );
       } catch (error: unknown) {

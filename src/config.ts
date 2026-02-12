@@ -44,7 +44,8 @@ const config = {
     launchTimeoutMs: 10_000,
     screenshotScale: 2,
     overlayGridDivisions: 9,
-    referenceWidth: 836,
+    scrollSpeed: 2,
+    swipeSpeed: 2,
   },
 } as const;
 

@@ -32,7 +32,7 @@ export function registerCoordinateTools({
     'get_coordinates',
     {
       description:
-        'Convert grid labels to exact pixel coordinates. ALWAYS use this tool to determine coordinates for tap, swipe, and long_press — never estimate coordinates manually or use the calculate tool for coordinate math. Provide the grid column (X axis) and row (Y axis) labels nearest to the target, plus a percentage offset (0–100) toward the next grid line.',
+        'Convert grid labels to exact pixel coordinates. ALWAYS use this tool to determine coordinates for tap, swipe, and long_press — never estimate coordinates manually. Provide the grid column (X axis) and row (Y axis) labels nearest to the target, plus a percentage offset (0–100) toward the next grid line.',
       inputSchema: {
         column: z
           .string()

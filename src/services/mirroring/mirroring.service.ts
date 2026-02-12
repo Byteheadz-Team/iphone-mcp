@@ -17,7 +17,8 @@ const coordinateSchema = z.number().finite();
 
 const SCALE = config.mirroring.screenshotScale;
 const TARGET_DIVISIONS = config.mirroring.overlayGridDivisions;
-const REFERENCE_WIDTH = config.mirroring.referenceWidth;
+const SCROLL_SPEED = config.mirroring.scrollSpeed;
+const SWIPE_SPEED = config.mirroring.swipeSpeed;
 
 export interface ScreenInfo {
   width: number;
@@ -30,6 +31,7 @@ export class MirroringService extends Module {
   private client: MirroringClient;
   private windowInfo: WindowInfo | null = null;
   private gridLayout: GridLayout | null = null;
+  private naturalScrolling = true;
   readonly permissionWarnings = {
     accessibility: null as string | null,
     screenRecording: null as string | null,
@@ -61,6 +63,11 @@ export class MirroringService extends Module {
         'Enable it in System Settings > Privacy & Security > Screen Recording.';
       this.log.warn(this.permissionWarnings.screenRecording);
     }
+
+    this.naturalScrolling = await this.client.isNaturalScrolling();
+    this.log.info(
+      `Natural scrolling: ${this.naturalScrolling ? 'ON' : 'OFF'}`,
+    );
 
     try {
       await this.client.ensureRunning();
@@ -147,8 +154,33 @@ export class MirroringService extends Module {
       startY: start.y,
       endX: end.x,
       endY: end.y,
-      durationMs: duration ?? 500,
+      durationMs: (duration ?? 500) / SWIPE_SPEED,
       easing: easing ?? SwipeEasing.Linear,
+    });
+  }
+
+  async scroll({
+    x,
+    y,
+    deltaX = 0,
+    deltaY = 0,
+  }: {
+    x: number;
+    y: number;
+    deltaX?: number;
+    deltaY?: number;
+  }): Promise<void> {
+    const info = await this.refreshWindowInfo();
+    const screen = this.toScreenCoords({ info, pixelX: x, pixelY: y });
+    // CGEventCreateScrollWheelEvent posted at kCGHIDEventTap is subject to
+    // the macOS "Natural scrolling" preference, which inverts the direction.
+    // Negate the deltas when natural scrolling is ON so the tool contract
+    // stays consistent: positive deltaY = scroll down (content moves up).
+    const sign = this.naturalScrolling ? -1 : 1;
+    await this.client.postScroll({
+      ...screen,
+      deltaX: deltaX * sign * SCROLL_SPEED,
+      deltaY: deltaY * sign * SCROLL_SPEED,
     });
   }
 
@@ -166,13 +198,10 @@ export class MirroringService extends Module {
   }
 
   getGridLayout(): GridLayout {
-    return (
-      this.gridLayout ??
-      computeGridLayout({
-        shortSide: REFERENCE_WIDTH,
-        targetDivisions: TARGET_DIVISIONS,
-      })
-    );
+    if (!this.gridLayout) {
+      throw new Error('Grid layout not available — MirroringService has not started');
+    }
+    return this.gridLayout;
   }
 
   async getScreenInfo(): Promise<ScreenInfo> {

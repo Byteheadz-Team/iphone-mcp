@@ -28,7 +28,7 @@ That's it. Ask Claude to "take a screenshot of my iPhone" to verify it works.
 ```
 MCP Client  ──stdio──>  iphone-mcp  ──>  iPhone Mirroring window
                                               ├── screencapture + sips (2x PNG screenshot)
-                                              ├── CGEvent injection (clicks, drags)
+                                              ├── CGEvent injection (clicks, drags, scroll wheel)
                                               └── AppleScript keystroke (text input)
 ```
 
@@ -36,6 +36,7 @@ MCP Client  ──stdio──>  iphone-mcp  ──>  iPhone Mirroring window
 
 - **Screenshots** via `screencapture` + `sips` -- captures the mirroring window as PNG, resampled to 2x resolution
 - **Taps & swipes** via `CGEvent` (JXA/osascript) -- injects mouse events at the right screen coordinates
+- **Scrolling** via `CGEventCreateScrollWheelEvent` -- trackpad-style scroll wheel events for smooth content scrolling (auto-corrected for the macOS "Natural scrolling" preference)
 - **Text input** via AppleScript `keystroke` -- types into whatever field is focused
 
 ## Requirements
@@ -51,10 +52,10 @@ MCP Client  ──stdio──>  iphone-mcp  ──>  iPhone Mirroring window
 
 The application hosting the MCP server (e.g. Terminal, VS Code, Claude Desktop) needs two macOS permissions:
 
-| Permission           | What it enables                      | Where to grant                                          |
-| -------------------- | ------------------------------------ | ------------------------------------------------------- |
-| **Accessibility**    | Tap, swipe, type (CGEvent injection) | System Settings > Privacy & Security > Accessibility    |
-| **Screen Recording** | Screenshots (screencapture)          | System Settings > Privacy & Security > Screen Recording |
+| Permission           | What it enables                              | Where to grant                                          |
+| -------------------- | -------------------------------------------- | ------------------------------------------------------- |
+| **Accessibility**    | Tap, swipe, scroll, type (CGEvent injection) | System Settings > Privacy & Security > Accessibility    |
+| **Screen Recording** | Screenshots (screencapture)                  | System Settings > Privacy & Security > Screen Recording |
 
 The server **automatically prompts** for Accessibility permission on first launch -- macOS will open System Settings where you can toggle the switch for the host application. Screen Recording permission is checked silently. If either permission isn't granted, tool responses will include a warning message identifying which application needs access (e.g. "Accessibility permission is not granted for Terminal").
 
@@ -88,7 +89,8 @@ Then just talk to Claude:
 
 - "Take a screenshot of my iPhone"
 - "Tap the Settings icon"
-- "Swipe up to go home"
+- "Scroll down in Settings"
+- "Swipe left to the next home screen page"
 - "Type 'hello world' into the search field"
 
 ### With Claude Desktop
@@ -140,13 +142,14 @@ Runs the server with `tsx watch` for automatic restarts on file changes.
 
 ### UI Automation
 
-| Tool           | Description                                           | Parameters                                                                     |
-| -------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `tap`          | Tap at coordinates (in screenshot pixels)             | `x`, `y`, `screenshotDelay?`                                                   |
-| `long_press`   | Press and hold at coordinates for a duration          | `x`, `y`, `duration` (seconds), `screenshotDelay?`                             |
-| `swipe`        | Swipe between two points with optional easing         | `startX`, `startY`, `endX`, `endY`, `duration?`, `easing?`, `screenshotDelay?` |
-| `type_text`    | Type text into the focused input field                | `text`, `screenshotDelay?`                                                     |
-| `press_button` | Press a device button (home, app_switcher, spotlight) | `button`, `screenshotDelay?`                                                   |
+| Tool           | Description                                                                                                  | Parameters                                                                     |
+| -------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| `tap`          | Tap at coordinates (in screenshot pixels)                                                                    | `x`, `y`, `screenshotDelay?`                                                   |
+| `long_press`   | Press and hold at coordinates for a duration                                                                 | `x`, `y`, `duration` (seconds), `screenshotDelay?`                             |
+| `swipe`        | Swipe between two points -- best for directional gestures (page switching, dismissing, pull-to-refresh)      | `startX`, `startY`, `endX`, `endY`, `duration?`, `easing?`, `screenshotDelay?` |
+| `scroll`       | Scroll content at a point -- best for scrolling lists, web pages, and feeds (trackpad-style scroll events)   | `x`, `y`, `deltaX?`, `deltaY?`, `screenshotDelay?`                            |
+| `type_text`    | Type text into the focused input field                                                                       | `text`, `screenshotDelay?`                                                     |
+| `press_button` | Press a device button (home, app_switcher, spotlight)                                                        | `button`, `screenshotDelay?`                                                   |
 
 ### Clipboard
 
@@ -157,10 +160,9 @@ Runs the server with `tsx watch` for automatic restarts on file changes.
 
 ### Utility
 
-| Tool              | Description                                                          | Parameters                              |
-| ----------------- | -------------------------------------------------------------------- | --------------------------------------- |
-| `calculate`       | Evaluate a math expression (the AI uses this instead of mental math) | `expression`                            |
-| `get_coordinates` | Convert grid labels to exact pixel coordinates for tap/swipe         | `column`, `row`, `xPercent`, `yPercent` |
+| Tool              | Description                                                         | Parameters                              |
+| ----------------- | ------------------------------------------------------------------- | --------------------------------------- |
+| `get_coordinates` | Convert grid labels to exact pixel coordinates for tap/swipe/scroll | `column`, `row`, `xPercent`, `yPercent` |
 
 ### How the AI navigates
 
@@ -210,8 +212,8 @@ The result: the AI goes from "somewhere around the middle of the screen" to "bet
 
 Configuration is via environment variables:
 
-| Variable    | Default | Description                                                            |
-| ----------- | ------- | ---------------------------------------------------------------------- |
+| Variable      | Default | Description                                                            |
+| ------------- | ------- | ---------------------------------------------------------------------- |
 | `APP_ENV`   | `local` | Environment (`test`, `local`, `dev`, `prod`). Falls back to `NODE_ENV` |
 | `LOG_LEVEL` | `info`  | Log level (`debug`, `info`, `warn`, `error`, `silent`)                 |
 

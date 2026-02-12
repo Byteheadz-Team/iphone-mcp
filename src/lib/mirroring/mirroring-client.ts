@@ -24,7 +24,6 @@ const LAUNCH_POLL_INTERVAL_MS = 500;
 function escapeAppleScriptString(str: string): string {
   return str
     .replace(/\\/g, '\\\\')
-    .replace(/'/g, "\\'")
     .replace(/"/g, '\\"')
     .replace(/\n/g, '\\n')
     .replace(/\r/g, '\\r');
@@ -256,6 +255,45 @@ $.CGEventPost($.kCGHIDEventTap, mouseUp);
     await execFile('osascript', ['-l', 'JavaScript', '-e', script]);
   }
 
+  async postScroll({
+    x,
+    y,
+    deltaX,
+    deltaY,
+  }: {
+    x: number;
+    y: number;
+    deltaX: number;
+    deltaY: number;
+  }): Promise<void> {
+    await this.activate();
+
+    const stepSize = 4;
+    const stepsY = deltaY !== 0 ? Math.max(Math.round(Math.abs(deltaY) / stepSize), 1) : 0;
+    const stepsX = deltaX !== 0 ? Math.max(Math.round(Math.abs(deltaX) / stepSize), 1) : 0;
+    const totalSteps = Math.max(stepsY, stepsX, 1);
+    const dyPerStep = deltaY !== 0 ? Math.round(deltaY / totalSteps) : 0;
+    const dxPerStep = deltaX !== 0 ? Math.round(deltaX / totalSteps) : 0;
+
+    const script = `
+ObjC.import('CoreGraphics');
+const point = $.CGPointMake(${x}, ${y});
+const move = $.CGEventCreateMouseEvent(null, $.kCGEventMouseMoved, point, 0);
+$.CGEventPost($.kCGHIDEventTap, move);
+delay(0.05);
+const steps = ${totalSteps};
+const dyPerStep = ${dyPerStep};
+const dxPerStep = ${dxPerStep};
+for (let i = 0; i < steps; i++) {
+  const e = $.CGEventCreateScrollWheelEvent(null, 0, 2, dyPerStep, dxPerStep);
+  $.CGEventPost($.kCGHIDEventTap, e);
+  delay(0.008);
+}
+`;
+
+    await execFile('osascript', ['-l', 'JavaScript', '-e', script]);
+  }
+
   async sendShortcut(key: string): Promise<void> {
     if (key.length !== 1) {
       throw new Error(
@@ -337,6 +375,20 @@ $.AXIsProcessTrustedWithOptions(options);
       return lastApp || 'your terminal app';
     } catch {
       return 'your terminal app';
+    }
+  }
+
+  async isNaturalScrolling(): Promise<boolean> {
+    try {
+      const { stdout } = await execFile('defaults', [
+        'read',
+        '-g',
+        'com.apple.swipescrolldirection',
+      ]);
+      return stdout.trim() !== '0';
+    } catch {
+      // Key doesn't exist — macOS default is natural scrolling ON
+      return true;
     }
   }
 

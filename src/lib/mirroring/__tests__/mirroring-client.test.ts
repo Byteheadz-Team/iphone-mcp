@@ -232,6 +232,16 @@ describe('MirroringClient', () => {
       const keystrokeScript = getCallScript(mock, 1);
       expect(keystrokeScript).toContain('say \\"hi\\" \\\\ there');
     });
+
+    it('does not escape single quotes (valid inside AppleScript double-quoted strings)', async () => {
+      const mock = mockExecFileSequence(['', '']);
+
+      const client = new MirroringClient();
+      await client.typeText("that's great");
+
+      const keystrokeScript = getCallScript(mock, 1);
+      expect(keystrokeScript).toContain("keystroke \"that's great\"");
+    });
   });
 
   describe('postLongPress', () => {
