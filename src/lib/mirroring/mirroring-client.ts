@@ -2,16 +2,26 @@ import { readFile, unlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { z } from 'zod';
+
 import { execFile } from '@lib/utils';
 
 import { overlayGrid } from './grid-overlay';
 import { SwipeEasing, type WindowInfo } from './mirroring.types';
 
+const windowInfoSchema = z.object({
+  x: z.number(),
+  y: z.number(),
+  width: z.number(),
+  height: z.number(),
+  windowId: z.number(),
+});
+
 const APP_NAME = 'iPhone Mirroring';
 const LAUNCH_TIMEOUT_MS = 10_000;
 const LAUNCH_POLL_INTERVAL_MS = 500;
 
-function escapeJxaString(str: string): string {
+function escapeAppleScriptString(str: string): string {
   return str
     .replace(/\\/g, '\\\\')
     .replace(/'/g, "\\'")
@@ -82,7 +92,7 @@ JSON.stringify({ x, y, width, height, windowId });
       '-e',
       script,
     ]);
-    const info = JSON.parse(stdout.trim()) as WindowInfo;
+    const info: WindowInfo = windowInfoSchema.parse(JSON.parse(stdout.trim()));
 
     if (info.windowId === 0) {
       throw new Error('Could not find iPhone Mirroring window ID');
@@ -229,6 +239,12 @@ $.CGEventPost($.kCGHIDEventTap, mouseUp);
   }
 
   async sendShortcut(key: string): Promise<void> {
+    if (key.length !== 1) {
+      throw new Error(
+        `sendShortcut expects a single character, got "${key}" (length ${String(key.length)})`,
+      );
+    }
+
     await this.activate();
 
     const script = `
@@ -244,7 +260,7 @@ end tell
     await this.activate();
 
     // Handle special characters and regular text
-    const escaped = escapeJxaString(text);
+    const escaped = escapeAppleScriptString(text);
     const keystrokeScript = `
 tell application "System Events"
   keystroke "${escaped}"
@@ -257,7 +273,59 @@ end tell
   async checkAccessibilityPermission(): Promise<boolean> {
     const script = `
 ObjC.import('Cocoa');
-$.AXIsProcessTrusted();
+const options = $.NSDictionary.dictionaryWithObjectForKey(true, 'AXTrustedCheckOptionPrompt');
+$.AXIsProcessTrustedWithOptions(options);
+`;
+
+    const { stdout } = await execFile('osascript', [
+      '-l',
+      'JavaScript',
+      '-e',
+      script,
+    ]);
+    return stdout.trim() === 'true';
+  }
+
+  async getHostAppName(): Promise<string> {
+    try {
+      let pid = process.ppid;
+      let lastApp = '';
+      for (let i = 0; i < 10; i++) {
+        const { stdout } = await execFile('ps', [
+          '-p',
+          String(pid),
+          '-o',
+          'comm=',
+          '-ww',
+        ]);
+        const comm = stdout.trim();
+        if (!comm) break;
+
+        const appMatch = /\/([^/]+)\.app\b/.exec(comm);
+        if (appMatch) {
+          lastApp = appMatch[1];
+        }
+
+        const { stdout: ppidOut } = await execFile('ps', [
+          '-p',
+          String(pid),
+          '-o',
+          'ppid=',
+        ]);
+        const ppid = Number(ppidOut.trim());
+        if (ppid <= 1) break;
+        pid = ppid;
+      }
+      return lastApp || 'your terminal app';
+    } catch {
+      return 'your terminal app';
+    }
+  }
+
+  async checkScreenRecordingPermission(): Promise<boolean> {
+    const script = `
+ObjC.import('CoreGraphics');
+$.CGRequestScreenCaptureAccess();
 `;
 
     const { stdout } = await execFile('osascript', [

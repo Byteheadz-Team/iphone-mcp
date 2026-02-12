@@ -13,16 +13,26 @@ export function registerScreenshotTools(
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
     async () => {
-      const data = await mirroringService.takeScreenshot();
-      return {
-        content: [
-          {
-            type: 'image',
-            data: data.toString('base64'),
-            mimeType: 'image/png',
-          },
-        ],
-      };
+      try {
+        const warning = mirroringService.permissionWarnings.screenRecording;
+        const data = await mirroringService.takeScreenshot();
+        return {
+          content: [
+            ...(warning ? [{ type: 'text' as const, text: warning }] : []),
+            {
+              type: 'image' as const,
+              data: data.toString('base64'),
+              mimeType: 'image/png',
+            },
+          ],
+        };
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${message}` }],
+          isError: true,
+        };
+      }
     },
   );
 
@@ -34,10 +44,23 @@ export function registerScreenshotTools(
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
     async () => {
-      const screenInfo = await mirroringService.getScreenInfo();
-      return {
-        content: [{ type: 'text', text: JSON.stringify(screenInfo, null, 2) }],
-      };
+      try {
+        const screenInfo = await mirroringService.getScreenInfo();
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify(screenInfo, null, 2),
+            },
+          ],
+        };
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${message}` }],
+          isError: true,
+        };
+      }
     },
   );
 }

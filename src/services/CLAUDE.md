@@ -4,7 +4,7 @@ All services extend `Module` (from `@lib/utils`) and receive dependencies via co
 
 ## mirroring/
 
-`MirroringService` wraps `MirroringClient` (from `lib/mirroring/`) with `Module` lifecycle and coordinate mapping. On `start()`, it checks accessibility permissions, launches iPhone Mirroring, and caches window info.
+`MirroringService` wraps `MirroringClient` (from `lib/mirroring/`) with `Module` lifecycle and coordinate mapping. On `start()`, it requests Accessibility and Screen Recording permissions (triggering macOS system prompts if not granted), resolves the host app name, caches permission warnings in the `permissionWarnings` property (`{ accessibility: string | null, screenRecording: string | null }`), launches iPhone Mirroring, and caches window info. Permission warnings include the host app name and are surfaced to the MCP client through tool responses.
 
 Key responsibility: **coordinate mapping**. Screenshots are captured at 2x resolution (configurable via `config.mirroring.screenshotScale`) with a grid overlay that adds padding on the top and left. The AI sends coordinates in the padded screenshot pixel space; the service subtracts the padding offset and divides by the scale factor to convert to macOS screen points: `screen_x = window.x + (pixel_x - COORD_OFFSET) / scale`. Coordinates are validated as finite numbers via zod before being passed to CGEvent.
 

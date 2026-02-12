@@ -1,4 +1,4 @@
-import { execFile as execFileCb, type ChildProcess } from 'node:child_process';
+import { execFile as execFileCb } from 'node:child_process';
 
 import { z } from 'zod';
 
@@ -25,6 +25,10 @@ export interface ScreenInfo {
 export class MirroringService extends Module {
   private client: MirroringClient;
   private windowInfo: WindowInfo | null = null;
+  readonly permissionWarnings = {
+    accessibility: null as string | null,
+    screenRecording: null as string | null,
+  };
 
   constructor(client?: MirroringClient) {
     super();
@@ -32,12 +36,25 @@ export class MirroringService extends Module {
   }
 
   override async start(): Promise<void> {
-    const hasPermission = await this.client.checkAccessibilityPermission();
-    if (!hasPermission) {
-      this.log.warn(
-        'Accessibility permission not granted. Tap/swipe/type may not work. ' +
-          'Go to System Settings > Privacy & Security > Accessibility and add this process.',
-      );
+    const hasAccessibility = await this.client.checkAccessibilityPermission();
+    const hasScreenRecording =
+      await this.client.checkScreenRecordingPermission();
+    const appName = await this.client.getHostAppName();
+
+    if (!hasAccessibility) {
+      this.permissionWarnings.accessibility =
+        `Accessibility permission is not granted for ${appName}. ` +
+        'Tap, swipe, and type actions may not work. ' +
+        'Enable it in System Settings > Privacy & Security > Accessibility.';
+      this.log.warn(this.permissionWarnings.accessibility);
+    }
+
+    if (!hasScreenRecording) {
+      this.permissionWarnings.screenRecording =
+        `Screen Recording permission is not granted for ${appName}. ` +
+        'Screenshots may be blank. ' +
+        'Enable it in System Settings > Privacy & Security > Screen Recording.';
+      this.log.warn(this.permissionWarnings.screenRecording);
     }
 
     try {
@@ -125,13 +142,10 @@ export class MirroringService extends Module {
   }
 
   async getScreenInfo(): Promise<ScreenInfo> {
-    await this.ensureReady();
-    if (!this.windowInfo) {
-      throw new Error('iPhone Mirroring window not available');
-    }
+    const info = await this.refreshWindowInfo();
     return {
-      width: this.windowInfo.width * SCALE,
-      height: this.windowInfo.height * SCALE,
+      width: info.width * SCALE,
+      height: info.height * SCALE,
       scale: SCALE,
       gridPadding: COORD_OFFSET,
     };
@@ -144,7 +158,7 @@ export class MirroringService extends Module {
 
   async setClipboard(content: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      const proc: ChildProcess = execFileCb('pbcopy', (err) => {
+      const proc = execFileCb('pbcopy', (err) => {
         if (err) {
           reject(new Error(`pbcopy failed: ${err.message}`));
         } else {

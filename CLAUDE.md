@@ -39,10 +39,7 @@ Build uses `tsup` (esbuild) which bundles everything into a single `dist/index.j
 
 ## iPhone communication
 
-Two channels to the iPhone:
-
-- **usbmuxd + lockdown** (device info, battery): Zero npm dependencies. Uses Node built-ins (`node:net`, `node:tls`, `node:buffer`). Unix socket at `/var/run/usbmuxd`. 16-byte LE header + XML plist. Lockdown on device port 62078: 4-byte BE length + XML plist. TLS upgrade uses pairing certificates.
-- **iPhone Mirroring** (UI automation): macOS Sequoia's `com.apple.ScreenContinuity` mirrors the iPhone screen to a macOS window. The server takes screenshots via `screencapture` (resampled to 2x via `sips`), injects clicks/drags via `CGEvent` (JXA/osascript), and types via AppleScript `keystroke`. The window is activated before each input event. Zero setup beyond what Apple provides.
+All interaction goes through **iPhone Mirroring** (macOS Sequoia's `com.apple.ScreenContinuity`), which mirrors the iPhone screen to a macOS window. The server takes screenshots via `screencapture` (resampled to 2x via `sips`), injects clicks/drags via `CGEvent` (JXA/osascript), and types via AppleScript `keystroke`. The window is activated before each input event. Zero setup beyond what Apple provides. At startup, the server requests Accessibility and Screen Recording permissions using macOS prompting APIs (`AXIsProcessTrustedWithOptions`, `CGRequestScreenCaptureAccess`), which open System Settings if not yet granted. Permission state is cached and surfaced as warning text in tool responses (e.g. "Accessibility permission is not granted for Terminal…") so the AI client can relay the message to the user.
 
 ## Testing
 
@@ -55,13 +52,11 @@ Two channels to the iPhone:
 ## Common gotchas
 
 - `Module.start()` and `Module.stop()` return `Promise<void> | void` — always `await` them to avoid `@typescript-eslint/no-floating-promises`.
-- Plist `PlistDict` values are `PlistValue`, not `PlistValue | undefined` — interfaces extending it can't have optional properties of plist types.
-- usbmuxd port encoding is byte-swapped: `((port & 0xff) << 8) | ((port >> 8) & 0xff)`.
 - Coordinate mapping: screenshots are captured at 2x resolution (configurable via `config.mirroring.screenshotScale`), then a grid overlay is composited via `sharp` (SVG over the image). The grid adds a black margin (`config.mirroring.overlayGridPadding`) on the top and left of the screenshot with labeled reference lines every `config.mirroring.overlayGridSpacing` pixels. The AI sends coordinates in the padded image space; `MirroringService.toScreenCoords()` subtracts the padding offset and divides by the scale factor: `screen_x = window.x + (pixel_x - COORD_OFFSET) / scale`. `COORD_OFFSET` equals `overlayGridPadding` when `overlayGridSpacing` is non-zero, otherwise 0.
 - The screenshot output includes the window title bar. Coordinates the AI provides from the screenshot already account for it.
 - `sharp` is the only native npm dependency. It's marked `external` in `tsup.config.ts` so it's not bundled — it must be installed in `node_modules` at runtime. Ships prebuilt binaries for macOS arm64/x64.
 - `MirroringClient` activates the iPhone Mirroring window before every input event (click, drag, type). Without this, `CGEvent` posts may be silently ignored if the window isn't frontmost.
-- Swipes always require explicit start/end coordinates (no direction-based mode). `postDrag()` applies easing curves (default `'linear'`) and a 30ms initial dwell after touch-down to mimic natural finger contact; the `SwipeEasing` type is defined in `lib/mirroring/mirroring.types.ts`. The AI should avoid starting swipes directly on interactive elements (icons, buttons) to prevent triggering edit/jiggle mode.
+- Swipes always require explicit start/end coordinates (no direction-based mode). `postDrag()` applies easing curves (default `'linear'`) and a 30ms initial dwell after touch-down to mimic natural finger contact; the `SwipeEasing` enum is defined in `lib/mirroring/mirroring.types.ts`. The AI should avoid starting swipes directly on interactive elements (icons, buttons) to prevent triggering edit/jiggle mode.
 - Swiping up from the bottom edge does not trigger the iOS home gesture via iPhone Mirroring. Use `press_button` with `"home"` instead. Other supported buttons: `"app_switcher"` (⌘2) and `"spotlight"` (⌘3).
 - The `calculate` tool uses a hand-written recursive descent parser (no `eval`). It has no service dependencies — `registerMathTools` only takes the `McpServer`. The handler is synchronous.
 - The `get_coordinates` tool converts grid labels + percentage offsets to exact pixel coordinates. It replaces manual coordinate arithmetic — the LLM should always use `get_coordinates` instead of `calculate` for coordinate math. No service dependencies — `registerCoordinateTools` only takes the `McpServer`. Accepts `column`, `row`, `xPercent`, `yPercent`; percentage fields accept numbers or strings with optional trailing `%`.

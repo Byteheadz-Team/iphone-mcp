@@ -8,14 +8,14 @@ Dependencies: `MirroringService`.
 
 ## tools/
 
-Each file registers a group of related tools using `server.registerTool(name, config, handler)` where config is `{ description, inputSchema?, annotations? }`. Tool handlers return `{ content: [...] }` where content is either `{ type: 'text', text }` or `{ type: 'image', data, mimeType }` (for screenshots). All tools set `annotations` with `readOnlyHint` (for query tools) or `destructiveHint: false` (for UI actions) and `openWorldHint: false`.
+Each file registers a group of related tools using `server.registerTool(name, config, handler)` where config is `{ description, inputSchema?, annotations? }` and `inputSchema` is a record of parameter names to zod schemas (e.g. `{ x: z.number(), y: z.number() }`). Tool handlers return `{ content: [...] }` where content is either `{ type: 'text', text }` or `{ type: 'image', data, mimeType }` (for screenshots). All tools set `annotations` with `readOnlyHint` (for query tools) or `destructiveHint: false` (for UI actions) and `openWorldHint: false`.
 
-Error responses set `isError: true` in the return value rather than throwing — this gives the MCP client a readable error message instead of a stack trace.
+All tool handlers wrap their logic in `try/catch` and return `{ content: [{ type: 'text', text: 'Error: ...' }], isError: true }` on failure — this gives the MCP client a readable error message instead of a stack trace.
 
 Files:
 
-- `screenshot-tools.ts` — `screenshot`, `get_screen_info`. Depends on `MirroringService`.
-- `automation-tools.ts` — `tap`, `long_press`, `swipe`, `type_text`, `press_button`. `press_button` accepts `"home"`, `"app_switcher"`, and `"spotlight"`.
+- `screenshot-tools.ts` — `screenshot`, `get_screen_info`. Depends on `MirroringService`. The `screenshot` tool prepends a Screen Recording permission warning (from `mirroringService.permissionWarnings.screenRecording`) as a text content block before the image when the permission is missing.
+- `automation-tools.ts` — `tap`, `long_press`, `swipe`, `type_text`, `press_button`. `press_button` accepts `"home"`, `"app_switcher"`, and `"spotlight"`. All automation tools prepend an Accessibility permission warning (from `mirroringService.permissionWarnings.accessibility`) via a local `actionContent()` helper when the permission is missing.
 - `mirroring-control-tools.ts` — `get_clipboard`, `set_clipboard`. Depends on `MirroringService`.
 - `math-tools.ts` — `calculate`. Safe expression evaluator (recursive descent parser, no `eval`). Supports `+`, `-`, `*`, `/`, `%`, parentheses, and functions (`round`, `floor`, `ceil`, `abs`, `sqrt`, `pow`, `min`, `max`). No service dependencies. For general arithmetic only — coordinate math should use `get_coordinates` instead.
 - `coordinate-tools.ts` — `get_coordinates`. Converts grid labels (column/row) and percentage offsets to exact pixel coordinates for `tap`/`swipe`/`long_press`. Pure computation, no service dependencies. Reads `overlayGridSpacing` and `overlayGridPadding` from config. Accepts `column`, `row`, `xPercent`, `yPercent` — percentage fields accept numbers or strings (trailing `%` stripped).

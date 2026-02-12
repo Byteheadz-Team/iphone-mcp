@@ -17,10 +17,18 @@ export function registerMirroringControlTools(
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
     async () => {
-      const content = await mirroringService.getClipboard();
-      return {
-        content: [{ type: 'text', text: content }],
-      };
+      try {
+        const content = await mirroringService.getClipboard();
+        return {
+          content: [{ type: 'text' as const, text: content }],
+        };
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${message}` }],
+          isError: true,
+        };
+      }
     },
   );
 
@@ -35,10 +43,18 @@ export function registerMirroringControlTools(
       annotations: { destructiveHint: false, openWorldHint: false },
     },
     async ({ content, screenshotDelay }) => {
-      await mirroringService.setClipboard(content);
-      return withScreenshotAfter(mirroringService, screenshotDelay, [
-        { type: 'text', text: 'Clipboard content set' },
-      ]);
+      try {
+        await mirroringService.setClipboard(content);
+        return withScreenshotAfter(mirroringService, screenshotDelay, [
+          { type: 'text', text: 'Clipboard content set' },
+        ]);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${message}` }],
+          isError: true,
+        };
+      }
     },
   );
 }

@@ -9,51 +9,12 @@
 
 import { access } from 'node:fs/promises';
 
+import { MirroringClient } from '@lib/mirroring';
 import { execFile } from '@lib/utils';
 
 const PASS = '\x1b[32m✓\x1b[0m';
 const FAIL = '\x1b[31m✗\x1b[0m';
 const WARN = '\x1b[33m!\x1b[0m';
-
-async function getHostAppName(): Promise<string> {
-  try {
-    // Walk up the process tree to find the outermost .app (terminal/IDE)
-    let pid = process.ppid;
-    let lastApp = '';
-    for (let i = 0; i < 10; i++) {
-      // Use wide column to avoid truncation of long paths
-      const { stdout } = await execFile('ps', [
-        '-p',
-        String(pid),
-        '-o',
-        'comm=',
-        '-ww',
-      ]);
-      const comm = stdout.trim();
-      if (!comm) break;
-
-      // Extract the .app name from the path (e.g. "/Applications/Visual Studio Code.app/Contents/MacOS/Electron")
-      const appMatch = /\/([^/]+)\.app\b/.exec(comm);
-      if (appMatch) {
-        lastApp = appMatch[1];
-      }
-
-      // Get the parent pid separately to avoid column width issues
-      const { stdout: ppidOut } = await execFile('ps', [
-        '-p',
-        String(pid),
-        '-o',
-        'ppid=',
-      ]);
-      const ppid = Number(ppidOut.trim());
-      if (ppid <= 1) break;
-      pid = ppid;
-    }
-    return lastApp || 'your terminal app';
-  } catch {
-    return 'your terminal app';
-  }
-}
 
 let failures = 0;
 
@@ -201,7 +162,7 @@ async function main(): Promise<void> {
   console.log();
 
   console.log('Permissions:');
-  const appName = await getHostAppName();
+  const appName = await new MirroringClient().getHostAppName();
   await checkAccessibilityPermission(appName);
   await checkScreenRecordingPermission(appName);
   console.log();

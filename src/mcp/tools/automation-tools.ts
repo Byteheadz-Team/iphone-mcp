@@ -6,10 +6,29 @@ import { SwipeEasing } from '@services/mirroring/mirroring.types';
 
 import { screenshotDelaySchema, withScreenshotAfter } from './screenshot-after';
 
+function toolError(error: unknown): {
+  content: [{ type: 'text'; text: string }];
+  isError: true;
+} {
+  const message = error instanceof Error ? error.message : String(error);
+  return {
+    content: [{ type: 'text' as const, text: `Error: ${message}` }],
+    isError: true,
+  };
+}
+
 export function registerAutomationTools(
   server: McpServer,
   mirroringService: MirroringService,
 ): void {
+  function actionContent(text: string): Array<{ type: 'text'; text: string }> {
+    const warning = mirroringService.permissionWarnings.accessibility;
+    const blocks: Array<{ type: 'text'; text: string }> = [];
+    if (warning) blocks.push({ type: 'text', text: warning });
+    blocks.push({ type: 'text', text });
+    return blocks;
+  }
+
   server.registerTool(
     'tap',
     {
@@ -23,10 +42,16 @@ export function registerAutomationTools(
       annotations: { destructiveHint: false, openWorldHint: false },
     },
     async ({ x, y, screenshotDelay }) => {
-      await mirroringService.tap(x, y);
-      return withScreenshotAfter(mirroringService, screenshotDelay, [
-        { type: 'text', text: `Tapped at (${x}, ${y})` },
-      ]);
+      try {
+        await mirroringService.tap(x, y);
+        return withScreenshotAfter(
+          mirroringService,
+          screenshotDelay,
+          actionContent(`Tapped at (${x}, ${y})`),
+        );
+      } catch (error: unknown) {
+        return toolError(error);
+      }
     },
   );
 
@@ -46,14 +71,17 @@ export function registerAutomationTools(
       annotations: { destructiveHint: false, openWorldHint: false },
     },
     async ({ x, y, duration, screenshotDelay }) => {
-      const durationMs = Math.round(duration * 1000);
-      await mirroringService.longPress(x, y, durationMs);
-      return withScreenshotAfter(mirroringService, screenshotDelay, [
-        {
-          type: 'text',
-          text: `Long pressed at (${x}, ${y}) for ${duration}s`,
-        },
-      ]);
+      try {
+        const durationMs = Math.round(duration * 1000);
+        await mirroringService.longPress(x, y, durationMs);
+        return withScreenshotAfter(
+          mirroringService,
+          screenshotDelay,
+          actionContent(`Long pressed at (${x}, ${y}) for ${duration}s`),
+        );
+      } catch (error: unknown) {
+        return toolError(error);
+      }
     },
   );
 
@@ -94,20 +122,25 @@ export function registerAutomationTools(
       easing,
       screenshotDelay,
     }) => {
-      await mirroringService.swipe(
-        startX,
-        startY,
-        endX,
-        endY,
-        duration,
-        easing,
-      );
-      return withScreenshotAfter(mirroringService, screenshotDelay, [
-        {
-          type: 'text',
-          text: `Swiped from (${startX}, ${startY}) to (${endX}, ${endY})`,
-        },
-      ]);
+      try {
+        await mirroringService.swipe(
+          startX,
+          startY,
+          endX,
+          endY,
+          duration,
+          easing,
+        );
+        return withScreenshotAfter(
+          mirroringService,
+          screenshotDelay,
+          actionContent(
+            `Swiped from (${startX}, ${startY}) to (${endX}, ${endY})`,
+          ),
+        );
+      } catch (error: unknown) {
+        return toolError(error);
+      }
     },
   );
 
@@ -123,10 +156,16 @@ export function registerAutomationTools(
       annotations: { destructiveHint: false, openWorldHint: false },
     },
     async ({ text, screenshotDelay }) => {
-      await mirroringService.typeText(text);
-      return withScreenshotAfter(mirroringService, screenshotDelay, [
-        { type: 'text', text: `Typed: "${text}"` },
-      ]);
+      try {
+        await mirroringService.typeText(text);
+        return withScreenshotAfter(
+          mirroringService,
+          screenshotDelay,
+          actionContent(`Typed: "${text}"`),
+        );
+      } catch (error: unknown) {
+        return toolError(error);
+      }
     },
   );
 
@@ -146,10 +185,16 @@ export function registerAutomationTools(
       annotations: { destructiveHint: false, openWorldHint: false },
     },
     async ({ button, screenshotDelay }) => {
-      await mirroringService.pressButton(button);
-      return withScreenshotAfter(mirroringService, screenshotDelay, [
-        { type: 'text', text: `Pressed button: ${button}` },
-      ]);
+      try {
+        await mirroringService.pressButton(button);
+        return withScreenshotAfter(
+          mirroringService,
+          screenshotDelay,
+          actionContent(`Pressed button: ${button}`),
+        );
+      } catch (error: unknown) {
+        return toolError(error);
+      }
     },
   );
 }

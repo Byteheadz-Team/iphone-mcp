@@ -26,12 +26,10 @@ That's it. Ask Claude to "take a screenshot of my iPhone" to verify it works.
 ## How it works
 
 ```
-MCP Client  ──stdio──>  iphone-mcp  ──usbmuxd──>  iPhone (device info, battery)
-                              │
-                              └── iPhone Mirroring window (screenshots, tap, swipe, type)
-                                    ├── screencapture + sips (2x PNG screenshot)
-                                    ├── CGEvent injection (clicks, drags)
-                                    └── AppleScript keystroke (text input)
+MCP Client  ──stdio──>  iphone-mcp  ──>  iPhone Mirroring window
+                                              ├── screencapture + sips (2x PNG screenshot)
+                                              ├── CGEvent injection (clicks, drags)
+                                              └── AppleScript keystroke (text input)
 ```
 
 **iPhone Mirroring** is a macOS Sequoia app that mirrors your iPhone's screen to a macOS window. This server programmatically interacts with that window:
@@ -39,8 +37,6 @@ MCP Client  ──stdio──>  iphone-mcp  ──usbmuxd──>  iPhone (device
 - **Screenshots** via `screencapture` + `sips` -- captures the mirroring window as PNG, resampled to 2x resolution
 - **Taps & swipes** via `CGEvent` (JXA/osascript) -- injects mouse events at the right screen coordinates
 - **Text input** via AppleScript `keystroke` -- types into whatever field is focused
-
-For device info and battery, the server speaks Apple's **usbmuxd** and **lockdown** protocols directly over USB -- implemented from scratch in TypeScript using only Node.js built-in modules. Zero native dependencies.
 
 ## Requirements
 
@@ -53,12 +49,14 @@ For device info and battery, the server speaks Apple's **usbmuxd** and **lockdow
 
 ### Permissions
 
-The host process (your terminal app) needs two macOS permissions:
+The application hosting the MCP server (e.g. Terminal, VS Code, Claude Desktop) needs two macOS permissions:
 
 | Permission           | What it enables                      | Where to grant                                          |
 | -------------------- | ------------------------------------ | ------------------------------------------------------- |
 | **Accessibility**    | Tap, swipe, type (CGEvent injection) | System Settings > Privacy & Security > Accessibility    |
 | **Screen Recording** | Screenshots (screencapture)          | System Settings > Privacy & Security > Screen Recording |
+
+The server **automatically prompts** for both permissions on first launch — macOS will open System Settings where you can toggle the switch for the host application. If permissions aren't granted, tool responses will include a warning message identifying which application needs access (e.g. "Accessibility permission is not granted for Terminal").
 
 Run `yarn doctor` to check if permissions are granted.
 
@@ -128,13 +126,11 @@ Runs the server with `tsx watch` for automatic restarts on file changes.
 
 ## Tools
 
-### Device
+### Screen Info
 
-| Tool              | Description                                               | Parameters |
-| ----------------- | --------------------------------------------------------- | ---------- |
-| `list_devices`    | List all connected iOS devices                            | none       |
-| `device_info`     | Get detailed device information (model, OS version, etc.) | `udid?`    |
-| `get_screen_info` | Get screen dimensions and scale factor                    | none       |
+| Tool              | Description                            | Parameters |
+| ----------------- | -------------------------------------- | ---------- |
+| `get_screen_info` | Get screen dimensions and scale factor | none       |
 
 ### Screenshot
 
@@ -152,13 +148,12 @@ Runs the server with `tsx watch` for automatic restarts on file changes.
 | `type_text`    | Type text into the focused input field                | `text`, `screenshotDelay?`                                                     |
 | `press_button` | Press a device button (home, app_switcher, spotlight) | `button`, `screenshotDelay?`                                                   |
 
-### Device Control
+### Clipboard
 
-| Tool               | Description                              | Parameters                    |
-| ------------------ | ---------------------------------------- | ----------------------------- |
-| `get_clipboard`    | Get clipboard text (Universal Clipboard) | none                          |
-| `set_clipboard`    | Set clipboard text (Universal Clipboard) | `content`, `screenshotDelay?` |
-| `get_battery_info` | Get battery level and charging state     | none                          |
+| Tool            | Description                              | Parameters                    |
+| --------------- | ---------------------------------------- | ----------------------------- |
+| `get_clipboard` | Get clipboard text (Universal Clipboard) | none                          |
+| `set_clipboard` | Set clipboard text (Universal Clipboard) | `content`, `screenshotDelay?` |
 
 ### Utility
 
@@ -215,11 +210,10 @@ The result: the AI goes from "somewhere around the middle of the screen" to "bet
 
 Configuration is via environment variables:
 
-| Variable             | Default            | Description                                            |
-| -------------------- | ------------------ | ------------------------------------------------------ |
-| `APP_ENV`            | `local`            | Environment (`test`, `local`, `dev`, `prod`)           |
-| `LOG_LEVEL`          | `info`             | Log level (`debug`, `info`, `warn`, `error`, `silent`) |
-| `USBMUX_SOCKET_PATH` | `/var/run/usbmuxd` | Path to usbmuxd socket                                 |
+| Variable    | Default | Description                                            |
+| ----------- | ------- | ------------------------------------------------------ |
+| `APP_ENV`   | `local` | Environment (`test`, `local`, `dev`, `prod`)           |
+| `LOG_LEVEL` | `info`  | Log level (`debug`, `info`, `warn`, `error`, `silent`) |
 
 ## Troubleshooting
 
@@ -241,18 +235,14 @@ Configuration is via environment variables:
 
 **Screenshots are blank or wrong**
 
-- Grant Screen Recording permission to your terminal app
-- System Settings > Privacy & Security > Screen Recording
+- The server prompts for Screen Recording permission on startup. If you dismissed it, grant it manually:
+- System Settings > Privacy & Security > Screen Recording — enable the application hosting the MCP server (e.g. Terminal, VS Code, Claude Desktop)
+- You may need to restart the server after granting Screen Recording
 
 **Taps/swipes don't work**
 
-- Grant Accessibility permission to your terminal app
-- System Settings > Privacy & Security > Accessibility
-
-**Pairing errors (device info/battery)**
-
-- Unplug the iPhone, re-plug, tap "Trust This Computer?" again
-- Check pairing records exist: `ls /var/db/lockdown/`
+- The server prompts for Accessibility permission on startup. If you dismissed it, grant it manually:
+- System Settings > Privacy & Security > Accessibility — enable the application hosting the MCP server (e.g. Terminal, VS Code, Claude Desktop)
 
 ## Disclaimer
 

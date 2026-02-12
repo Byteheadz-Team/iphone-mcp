@@ -21,26 +21,30 @@ type ExecFileCallback = (
   result: { stdout: string; stderr: string },
 ) => void;
 
+function findCallback(args: unknown[]): ExecFileCallback {
+  const cb = args.at(-1);
+  if (typeof cb !== 'function') {
+    throw new Error('No callback argument found in execFile call');
+  }
+  return cb as ExecFileCallback;
+}
+
 function mockExecFile(stdout: string) {
   const mock = execFileCb as unknown as ExecFileMock;
-  mock.mockImplementation(
-    (_cmd: string, _args: string[], cb: ExecFileCallback) => {
-      cb(null, { stdout, stderr: '' });
-    },
-  );
+  mock.mockImplementation((...args: unknown[]) => {
+    findCallback(args)(null, { stdout, stderr: '' });
+  });
   return mock;
 }
 
 function mockExecFileSequence(results: string[]) {
   const mock = execFileCb as unknown as ExecFileMock;
   let callIndex = 0;
-  mock.mockImplementation(
-    (_cmd: string, _args: string[], cb: ExecFileCallback) => {
-      const stdout = results[callIndex] ?? '';
-      callIndex++;
-      cb(null, { stdout, stderr: '' });
-    },
-  );
+  mock.mockImplementation((...args: unknown[]) => {
+    const stdout = results[callIndex] ?? '';
+    callIndex++;
+    findCallback(args)(null, { stdout, stderr: '' });
+  });
   return mock;
 }
 
@@ -104,11 +108,9 @@ describe('MirroringClient', () => {
     it('captures window and downscales to target width', async () => {
       const fakeImage = Buffer.from('fake-png');
       const mock = execFileCb as unknown as ExecFileMock;
-      mock.mockImplementation(
-        (_cmd: string, _args: string[], cb: ExecFileCallback) => {
-          cb(null, { stdout: '', stderr: '' });
-        },
-      );
+      mock.mockImplementation((...args: unknown[]) => {
+        findCallback(args)(null, { stdout: '', stderr: '' });
+      });
 
       const readMock = readFile as unknown as ExecFileMock;
       readMock.mockResolvedValue(fakeImage);
@@ -232,8 +234,122 @@ describe('MirroringClient', () => {
     });
   });
 
+  describe('postLongPress', () => {
+    it('activates window then generates mouse-down, delay, mouse-up', async () => {
+      const mock = mockExecFileSequence(['', '']);
+
+      const client = new MirroringClient();
+      await client.postLongPress(120, 250, 1500);
+
+      expect(mock).toHaveBeenCalledTimes(2);
+
+      const activateScript = getCallScript(mock, 0);
+      expect(activateScript).toContain('iPhone Mirroring');
+
+      const pressScript = getCallScript(mock, 1);
+      expect(pressScript).toContain('CGPointMake(120, 250)');
+      expect(pressScript).toContain('kCGEventLeftMouseDown');
+      expect(pressScript).toContain('kCGEventLeftMouseUp');
+      expect(pressScript).toContain('delay(1.5)');
+    });
+
+    it('passes extended timeout for long durations', async () => {
+      const mock = mockExecFileSequence(['', '']);
+
+      const client = new MirroringClient();
+      await client.postLongPress(0, 0, 3000);
+
+      // The long-press call (second) should include an options object with timeout
+      const longPressCall = mock.mock.calls[1] as unknown[];
+      const opts = longPressCall[2] as { timeout: number };
+      expect(opts.timeout).toBe(8000); // durationMs + 5000
+    });
+  });
+
+  describe('sendShortcut', () => {
+    it('activates window then sends keystroke with command down', async () => {
+      const mock = mockExecFileSequence(['', '']);
+
+      const client = new MirroringClient();
+      await client.sendShortcut('1');
+
+      expect(mock).toHaveBeenCalledTimes(2);
+
+      const activateScript = getCallScript(mock, 0);
+      expect(activateScript).toContain('iPhone Mirroring');
+
+      const keystrokeScript = getCallScript(mock, 1);
+      expect(keystrokeScript).toContain('keystroke "1" using command down');
+    });
+
+    it('throws for multi-character input', async () => {
+      const client = new MirroringClient();
+
+      await expect(client.sendShortcut('abc')).rejects.toThrow(
+        'sendShortcut expects a single character',
+      );
+    });
+
+    it('throws for empty string', async () => {
+      const client = new MirroringClient();
+
+      await expect(client.sendShortcut('')).rejects.toThrow(
+        'sendShortcut expects a single character',
+      );
+    });
+  });
+
+  describe('ensureRunning', () => {
+    it('opens the app and resolves when window appears', async () => {
+      const mock = mockExecFileSequence([
+        '', // open -a
+        JSON.stringify({
+          x: 0,
+          y: 0,
+          width: 400,
+          height: 800,
+          windowId: 42,
+        }),
+      ]);
+
+      const client = new MirroringClient();
+      await client.ensureRunning();
+
+      const firstCall = mock.mock.calls[0] as string[];
+      expect(firstCall[0]).toBe('open');
+      expect(firstCall[1]).toContain('-a');
+    });
+
+    it('retries getWindowInfo when the window is not ready', async () => {
+      const mock = execFileCb as unknown as ExecFileMock;
+      let callIndex = 0;
+      const results = [
+        '', // open -a
+        '', // first getWindowInfo → parse fails → retry
+        JSON.stringify({
+          x: 0,
+          y: 0,
+          width: 400,
+          height: 800,
+          windowId: 42,
+        }), // second getWindowInfo → success
+      ];
+      mock.mockImplementation((...args: unknown[]) => {
+        const stdout = results[callIndex] ?? '';
+        callIndex++;
+        findCallback(args)(null, { stdout, stderr: '' });
+      });
+
+      const client = new MirroringClient();
+      await client.ensureRunning();
+
+      // 1 open + 2 getWindowInfo (1 failed parse + 1 success)
+      expect(mock).toHaveBeenCalledTimes(3);
+    });
+  });
+
   describe('checkAccessibilityPermission', () => {
-    it('returns true when AXIsProcessTrusted returns true', async () => {
+    it('returns true when AXIsProcessTrustedWithOptions returns true', async () => {
       mockExecFile('true\n');
 
       const client = new MirroringClient();
@@ -242,13 +358,77 @@ describe('MirroringClient', () => {
       expect(result).toBe(true);
     });
 
-    it('returns false when AXIsProcessTrusted returns false', async () => {
+    it('returns false when AXIsProcessTrustedWithOptions returns false', async () => {
       mockExecFile('false\n');
 
       const client = new MirroringClient();
       const result = await client.checkAccessibilityPermission();
 
       expect(result).toBe(false);
+    });
+
+    it('uses the prompt option to trigger system dialog', async () => {
+      const mock = mockExecFile('true\n');
+
+      const client = new MirroringClient();
+      await client.checkAccessibilityPermission();
+
+      const script = getCallScript(mock, 0);
+      expect(script).toContain('AXIsProcessTrustedWithOptions');
+      expect(script).toContain('AXTrustedCheckOptionPrompt');
+    });
+  });
+
+  describe('getHostAppName', () => {
+    it('extracts app name from process tree', async () => {
+      mockExecFileSequence([
+        '/Applications/Visual Studio Code.app/Contents/MacOS/Electron',
+        '1',
+      ]);
+
+      const client = new MirroringClient();
+      const result = await client.getHostAppName();
+
+      expect(result).toBe('Visual Studio Code');
+    });
+
+    it('returns fallback when no .app is found', async () => {
+      mockExecFileSequence(['/usr/bin/node', '1']);
+
+      const client = new MirroringClient();
+      const result = await client.getHostAppName();
+
+      expect(result).toBe('your terminal app');
+    });
+  });
+
+  describe('checkScreenRecordingPermission', () => {
+    it('returns true when CGRequestScreenCaptureAccess returns true', async () => {
+      mockExecFile('true\n');
+
+      const client = new MirroringClient();
+      const result = await client.checkScreenRecordingPermission();
+
+      expect(result).toBe(true);
+    });
+
+    it('returns false when CGRequestScreenCaptureAccess returns false', async () => {
+      mockExecFile('false\n');
+
+      const client = new MirroringClient();
+      const result = await client.checkScreenRecordingPermission();
+
+      expect(result).toBe(false);
+    });
+
+    it('uses CGRequestScreenCaptureAccess to trigger system dialog', async () => {
+      const mock = mockExecFile('true\n');
+
+      const client = new MirroringClient();
+      await client.checkScreenRecordingPermission();
+
+      const script = getCallScript(mock, 0);
+      expect(script).toContain('CGRequestScreenCaptureAccess');
     });
   });
 });

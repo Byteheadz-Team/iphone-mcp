@@ -4,9 +4,11 @@ import { type MirroringService } from '@services/mirroring/mirroring.service';
 
 export const screenshotDelaySchema = z
   .number()
+  .min(0)
+  .max(30)
   .optional()
   .describe(
-    'Take a screenshot after this many seconds (e.g. 2). If omitted, no screenshot is taken.',
+    'Take a screenshot after this many seconds (e.g. 2, max 30). If omitted, no screenshot is taken.',
   );
 
 type ContentBlock =
