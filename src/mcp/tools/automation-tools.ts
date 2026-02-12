@@ -6,28 +6,32 @@ import { SwipeEasing } from '@services/mirroring/mirroring.types';
 
 import { screenshotDelaySchema, withScreenshotAfter } from './screenshot-after';
 
-function toolError(error: unknown): {
+const toolError = (
+  error: unknown,
+): {
   content: [{ type: 'text'; text: string }];
   isError: true;
-} {
+} => {
   const message = error instanceof Error ? error.message : String(error);
   return {
     content: [{ type: 'text' as const, text: `Error: ${message}` }],
     isError: true,
   };
-}
+};
 
-export function registerAutomationTools(
+export const registerAutomationTools = (
   server: McpServer,
   mirroringService: MirroringService,
-): void {
-  function actionContent(text: string): Array<{ type: 'text'; text: string }> {
+): void => {
+  const actionContent = (
+    text: string,
+  ): Array<{ type: 'text'; text: string }> => {
     const warning = mirroringService.permissionWarnings.accessibility;
     const blocks: Array<{ type: 'text'; text: string }> = [];
     if (warning) blocks.push({ type: 'text', text: warning });
     blocks.push({ type: 'text', text });
     return blocks;
-  }
+  };
 
   server.registerTool(
     'tap',
@@ -150,8 +154,12 @@ export function registerAutomationTools(
       description:
         'Scroll content at the given coordinates using trackpad-style scroll wheel events. Use this instead of swipe for scrolling through lists, web pages, feeds, and any scrollable content — it produces smoother, more reliable results. Only requires a single point (where to scroll) plus a delta amount, so no need to calculate start/end coordinates. Use swipe instead for directional gestures like switching pages, dismissing cards, pull-to-refresh, or drag-and-drop. Take a screenshot first to confirm the current screen state. The server auto-detects the macOS "Natural scrolling" setting at startup and compensates, so positive deltaY should consistently mean "scroll down" (content moves up). However, if the content moves the wrong way after scrolling, retry with the opposite sign (negate deltaY/deltaX).',
       inputSchema: {
-        x: z.number().describe('X coordinate to scroll at (in screenshot pixels)'),
-        y: z.number().describe('Y coordinate to scroll at (in screenshot pixels)'),
+        x: z
+          .number()
+          .describe('X coordinate to scroll at (in screenshot pixels)'),
+        y: z
+          .number()
+          .describe('Y coordinate to scroll at (in screenshot pixels)'),
         deltaX: z
           .number()
           .optional()
@@ -237,4 +245,4 @@ export function registerAutomationTools(
       }
     },
   );
-}
+};

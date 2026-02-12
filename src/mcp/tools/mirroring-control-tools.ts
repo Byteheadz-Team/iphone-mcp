@@ -5,10 +5,10 @@ import { type MirroringService } from '@services/mirroring/mirroring.service';
 
 import { screenshotDelaySchema, withScreenshotAfter } from './screenshot-after';
 
-export function registerMirroringControlTools(
+export const registerMirroringControlTools = (
   server: McpServer,
   mirroringService: MirroringService,
-): void {
+): void => {
   server.registerTool(
     'get_clipboard',
     {
@@ -57,4 +57,4 @@ export function registerMirroringControlTools(
       }
     },
   );
-}
+};

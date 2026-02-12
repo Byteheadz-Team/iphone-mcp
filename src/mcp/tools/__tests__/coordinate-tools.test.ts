@@ -20,7 +20,7 @@ type ToolHandler = (params: Record<string, unknown>) => {
   isError?: boolean;
 };
 
-function setup(): ToolHandler {
+const setup = (): ToolHandler => {
   let handler: ToolHandler | undefined;
   const fakeServer = {
     registerTool: (_name: string, _config: unknown, h: ToolHandler) => {
@@ -28,28 +28,31 @@ function setup(): ToolHandler {
     },
   } as unknown as McpServer;
 
-  registerCoordinateTools({ server: fakeServer, getGridLayout: () => MOCK_LAYOUT });
+  registerCoordinateTools({
+    server: fakeServer,
+    getGridLayout: () => MOCK_LAYOUT,
+  });
 
   if (!handler) {
     throw new Error('registerCoordinateTools did not register a tool');
   }
   return handler;
-}
+};
 
-function call(
+const call = (
   handler: ToolHandler,
   column: string,
   row: string,
   xPercent: number | string,
   yPercent: number | string,
-): { x: number; y: number } | { error: string } {
+): { x: number; y: number } | { error: string } => {
   const result = handler({ column, row, xPercent, yPercent });
   const text = result.content[0].text;
   if (result.isError) {
     return { error: text };
   }
   return JSON.parse(text) as { x: number; y: number };
-}
+};
 
 describe('get_coordinates', () => {
   const handler = setup();

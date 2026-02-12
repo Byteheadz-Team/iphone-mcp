@@ -3,15 +3,15 @@ import pkg from '../package.json';
 type AppEnv = 'test' | 'local' | 'dev' | 'prod';
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'silent';
 
-function getEnv(): AppEnv {
+const getEnv = (): AppEnv => {
   const env = process.env.APP_ENV ?? process.env.NODE_ENV;
   if (env === 'test' || env === 'local' || env === 'dev' || env === 'prod') {
     return env;
   }
   return 'local';
-}
+};
 
-function getLogLevel(): LogLevel {
+const getLogLevel = (): LogLevel => {
   const level = process.env.LOG_LEVEL;
   if (
     level === 'debug' ||
@@ -23,7 +23,7 @@ function getLogLevel(): LogLevel {
     return level;
   }
   return 'info';
-}
+};
 
 const env = getEnv();
 

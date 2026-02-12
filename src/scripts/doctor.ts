@@ -20,22 +20,22 @@ const WARN = '\x1b[33m!\x1b[0m';
 
 let failures = 0;
 
-function pass(msg: string): void {
+const pass = (msg: string): void => {
   console.log(`  ${PASS} ${msg}`);
-}
+};
 
-function fail(msg: string, hint?: string): void {
+const fail = (msg: string, hint?: string): void => {
   console.log(`  ${FAIL} ${msg}`);
   if (hint) console.log(`    → ${hint}`);
   failures++;
-}
+};
 
-function warn(msg: string, hint?: string): void {
+const warn = (msg: string, hint?: string): void => {
   console.log(`  ${WARN} ${msg}`);
   if (hint) console.log(`    → ${hint}`);
-}
+};
 
-async function checkMacOS(): Promise<void> {
+const checkMacOS = async (): Promise<void> => {
   try {
     const { stdout } = await execFile('sw_vers', ['-productVersion']);
     const version = stdout.trim();
@@ -51,9 +51,9 @@ async function checkMacOS(): Promise<void> {
   } catch {
     fail('Could not detect macOS version', 'This tool only works on macOS');
   }
-}
+};
 
-function checkNode(): void {
+const checkNode = (): void => {
   const version = process.version;
   const major = Number(version.slice(1).split('.')[0]);
   if (major >= 24) {
@@ -64,9 +64,9 @@ function checkNode(): void {
       'Install Node.js 24+ from https://nodejs.org',
     );
   }
-}
+};
 
-async function checkIPhoneMirroringApp(): Promise<void> {
+const checkIPhoneMirroringApp = async (): Promise<void> => {
   const appPath = '/System/Applications/iPhone Mirroring.app';
   try {
     await access(appPath);
@@ -77,9 +77,9 @@ async function checkIPhoneMirroringApp(): Promise<void> {
       'Requires macOS Sequoia 15+. The app should be at /System/Applications/iPhone Mirroring.app',
     );
   }
-}
+};
 
-async function checkConnectedDevice(): Promise<void> {
+const checkConnectedDevice = async (): Promise<void> => {
   try {
     const { stdout } = await execFile('system_profiler', ['SPUSBDataType']);
     if (stdout.includes('iPhone')) {
@@ -93,9 +93,9 @@ async function checkConnectedDevice(): Promise<void> {
   } catch {
     warn('Could not query USB devices');
   }
-}
+};
 
-async function checkAccessibilityPermission(appName: string): Promise<void> {
+const checkAccessibilityPermission = async (appName: string): Promise<void> => {
   const script = `
 ObjC.import('Cocoa');
 $.AXIsProcessTrusted();
@@ -121,9 +121,11 @@ $.AXIsProcessTrusted();
       `Tap/swipe/type require Accessibility access — add ${appName} in System Settings`,
     );
   }
-}
+};
 
-async function checkScreenRecordingPermission(appName: string): Promise<void> {
+const checkScreenRecordingPermission = async (
+  appName: string,
+): Promise<void> => {
   const probe = join(tmpdir(), `screc-probe-${Date.now()}.png`);
   try {
     await execFile('screencapture', ['-x', '-t', 'png', probe]);
@@ -144,9 +146,9 @@ async function checkScreenRecordingPermission(appName: string): Promise<void> {
   } finally {
     await unlink(probe).catch(() => {});
   }
-}
+};
 
-async function main(): Promise<void> {
+const main = async (): Promise<void> => {
   console.log('\niphone-mcp preflight check\n');
 
   console.log('System:');
@@ -176,6 +178,6 @@ async function main(): Promise<void> {
   } else {
     console.log('\x1b[32mAll checks passed.\x1b[0m Ready to run iphone-mcp.\n');
   }
-}
+};
 
 await main();

@@ -15,11 +15,11 @@ const LOG_LEVELS: Record<LogLevel, number> = {
   silent: 4,
 };
 
-function noop(): void {
+const noop = (): void => {
   // intentionally empty
-}
+};
 
-export function createLogger(scope: string): Logger {
+export const createLogger = (scope: string): Logger => {
   const level = LOG_LEVELS[config.logging.level];
 
   // All log output goes to stderr — stdout is reserved for MCP protocol (stdio transport).
@@ -41,4 +41,4 @@ export function createLogger(scope: string): Logger {
         ? (...args: unknown[]) => console.error(`[${scope}]`, ...args)
         : noop,
   };
-}
+};

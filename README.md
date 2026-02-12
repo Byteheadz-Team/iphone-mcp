@@ -142,14 +142,14 @@ Runs the server with `tsx watch` for automatic restarts on file changes.
 
 ### UI Automation
 
-| Tool           | Description                                                                                                  | Parameters                                                                     |
-| -------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
-| `tap`          | Tap at coordinates (in screenshot pixels)                                                                    | `x`, `y`, `screenshotDelay?`                                                   |
-| `long_press`   | Press and hold at coordinates for a duration                                                                 | `x`, `y`, `duration` (seconds), `screenshotDelay?`                             |
-| `swipe`        | Swipe between two points -- best for directional gestures (page switching, dismissing, pull-to-refresh)      | `startX`, `startY`, `endX`, `endY`, `duration?`, `easing?`, `screenshotDelay?` |
-| `scroll`       | Scroll content at a point -- best for scrolling lists, web pages, and feeds (trackpad-style scroll events)   | `x`, `y`, `deltaX?`, `deltaY?`, `screenshotDelay?`                            |
-| `type_text`    | Type text into the focused input field                                                                       | `text`, `screenshotDelay?`                                                     |
-| `press_button` | Press a device button (home, app_switcher, spotlight)                                                        | `button`, `screenshotDelay?`                                                   |
+| Tool           | Description                                                                                                | Parameters                                                                     |
+| -------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `tap`          | Tap at coordinates (in screenshot pixels)                                                                  | `x`, `y`, `screenshotDelay?`                                                   |
+| `long_press`   | Press and hold at coordinates for a duration                                                               | `x`, `y`, `duration` (seconds), `screenshotDelay?`                             |
+| `swipe`        | Swipe between two points -- best for directional gestures (page switching, dismissing, pull-to-refresh)    | `startX`, `startY`, `endX`, `endY`, `duration?`, `easing?`, `screenshotDelay?` |
+| `scroll`       | Scroll content at a point -- best for scrolling lists, web pages, and feeds (trackpad-style scroll events) | `x`, `y`, `deltaX?`, `deltaY?`, `screenshotDelay?`                             |
+| `type_text`    | Type text into the focused input field                                                                     | `text`, `screenshotDelay?`                                                     |
+| `press_button` | Press a device button (home, app_switcher, spotlight)                                                      | `button`, `screenshotDelay?`                                                   |
 
 ### Clipboard
 
@@ -212,8 +212,8 @@ The result: the AI goes from "somewhere around the middle of the screen" to "bet
 
 Configuration is via environment variables:
 
-| Variable      | Default | Description                                                            |
-| ------------- | ------- | ---------------------------------------------------------------------- |
+| Variable    | Default | Description                                                            |
+| ----------- | ------- | ---------------------------------------------------------------------- |
 | `APP_ENV`   | `local` | Environment (`test`, `local`, `dev`, `prod`). Falls back to `NODE_ENV` |
 | `LOG_LEVEL` | `info`  | Log level (`debug`, `info`, `warn`, `error`, `silent`)                 |
 

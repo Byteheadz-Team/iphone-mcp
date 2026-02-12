@@ -21,13 +21,12 @@ const APP_NAME = 'iPhone Mirroring';
 const LAUNCH_TIMEOUT_MS = 10_000;
 const LAUNCH_POLL_INTERVAL_MS = 500;
 
-function escapeAppleScriptString(str: string): string {
-  return str
+const escapeAppleScriptString = (str: string): string =>
+  str
     .replace(/\\/g, '\\\\')
     .replace(/"/g, '\\"')
     .replace(/\n/g, '\\n')
     .replace(/\r/g, '\\r');
-}
 
 export class MirroringClient {
   async ensureRunning(): Promise<void> {
@@ -137,7 +136,10 @@ JSON.stringify({ x, y, width, height, windowId });
 
       // Overlay grid lines and labels for coordinate reference.
       if (gridDivisions) {
-        return overlayGrid({ imageBuffer: buffer, targetDivisions: gridDivisions });
+        return overlayGrid({
+          imageBuffer: buffer,
+          targetDivisions: gridDivisions,
+        });
       }
 
       return buffer;
@@ -269,8 +271,10 @@ $.CGEventPost($.kCGHIDEventTap, mouseUp);
     await this.activate();
 
     const stepSize = 4;
-    const stepsY = deltaY !== 0 ? Math.max(Math.round(Math.abs(deltaY) / stepSize), 1) : 0;
-    const stepsX = deltaX !== 0 ? Math.max(Math.round(Math.abs(deltaX) / stepSize), 1) : 0;
+    const stepsY =
+      deltaY !== 0 ? Math.max(Math.round(Math.abs(deltaY) / stepSize), 1) : 0;
+    const stepsX =
+      deltaX !== 0 ? Math.max(Math.round(Math.abs(deltaX) / stepSize), 1) : 0;
     const totalSteps = Math.max(stepsY, stepsX, 1);
     const dyPerStep = deltaY !== 0 ? Math.round(deltaY / totalSteps) : 0;
     const dxPerStep = deltaX !== 0 ? Math.round(deltaX / totalSteps) : 0;

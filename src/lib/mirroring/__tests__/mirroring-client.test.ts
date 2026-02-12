@@ -21,23 +21,23 @@ type ExecFileCallback = (
   result: { stdout: string; stderr: string },
 ) => void;
 
-function findCallback(args: unknown[]): ExecFileCallback {
+const findCallback = (args: unknown[]): ExecFileCallback => {
   const cb = args.at(-1);
   if (typeof cb !== 'function') {
     throw new Error('No callback argument found in execFile call');
   }
   return cb as ExecFileCallback;
-}
+};
 
-function mockExecFile(stdout: string) {
+const mockExecFile = (stdout: string) => {
   const mock = execFileCb as unknown as ExecFileMock;
   mock.mockImplementation((...args: unknown[]) => {
     findCallback(args)(null, { stdout, stderr: '' });
   });
   return mock;
-}
+};
 
-function mockExecFileSequence(results: string[]) {
+const mockExecFileSequence = (results: string[]) => {
   const mock = execFileCb as unknown as ExecFileMock;
   let callIndex = 0;
   mock.mockImplementation((...args: unknown[]) => {
@@ -46,16 +46,16 @@ function mockExecFileSequence(results: string[]) {
     findCallback(args)(null, { stdout, stderr: '' });
   });
   return mock;
-}
+};
 
-function getCallScript(mock: ExecFileMock, callIdx: number): string {
+const getCallScript = (mock: ExecFileMock, callIdx: number): string => {
   const calls = mock.mock.calls as string[][][];
   const call = calls[callIdx];
   const args = call[1];
   const script = args.at(-1);
   if (!script) throw new Error('No script argument found');
   return script;
-}
+};
 
 describe('MirroringClient', () => {
   beforeEach(() => {
@@ -119,7 +119,10 @@ describe('MirroringClient', () => {
       unlinkMock.mockReturnValue(Promise.resolve());
 
       const client = new MirroringClient();
-      const result = await client.captureWindow({ windowId: 42, targetWidth: 400 });
+      const result = await client.captureWindow({
+        windowId: 42,
+        targetWidth: 400,
+      });
 
       expect(result).toEqual(fakeImage);
       // First call: screencapture
@@ -162,7 +165,13 @@ describe('MirroringClient', () => {
       const mock = mockExecFileSequence(['', '']);
 
       const client = new MirroringClient();
-      await client.postDrag({ startX: 100, startY: 200, endX: 100, endY: 400, durationMs: 500 });
+      await client.postDrag({
+        startX: 100,
+        startY: 200,
+        endX: 100,
+        endY: 400,
+        durationMs: 500,
+      });
 
       expect(mock).toHaveBeenCalledTimes(2);
 
@@ -179,7 +188,13 @@ describe('MirroringClient', () => {
       const mock = mockExecFileSequence(['', '']);
 
       const client = new MirroringClient();
-      await client.postDrag({ startX: 0, startY: 0, endX: 0, endY: 100, durationMs: 500 });
+      await client.postDrag({
+        startX: 0,
+        startY: 0,
+        endX: 0,
+        endY: 100,
+        durationMs: 500,
+      });
 
       const dragScript = getCallScript(mock, 1);
       expect(dragScript).toContain("const easing = 'linear'");
@@ -190,7 +205,13 @@ describe('MirroringClient', () => {
       const mock = mockExecFileSequence(['', '']);
 
       const client = new MirroringClient();
-      await client.postDrag({ startX: 0, startY: 0, endX: 0, endY: 100, durationMs: 500 });
+      await client.postDrag({
+        startX: 0,
+        startY: 0,
+        endX: 0,
+        endY: 100,
+        durationMs: 500,
+      });
 
       const dragScript = getCallScript(mock, 1);
       expect(dragScript).toContain('delay(0.03)');
@@ -200,7 +221,14 @@ describe('MirroringClient', () => {
       const mock = mockExecFileSequence(['', '']);
 
       const client = new MirroringClient();
-      await client.postDrag({ startX: 0, startY: 0, endX: 0, endY: 100, durationMs: 500, easing: SwipeEasing.EaseIn });
+      await client.postDrag({
+        startX: 0,
+        startY: 0,
+        endX: 0,
+        endY: 100,
+        durationMs: 500,
+        easing: SwipeEasing.EaseIn,
+      });
 
       const dragScript = getCallScript(mock, 1);
       expect(dragScript).toContain("const easing = 'ease-in'");
@@ -240,7 +268,7 @@ describe('MirroringClient', () => {
       await client.typeText("that's great");
 
       const keystrokeScript = getCallScript(mock, 1);
-      expect(keystrokeScript).toContain("keystroke \"that's great\"");
+      expect(keystrokeScript).toContain('keystroke "that\'s great"');
     });
   });
 

@@ -8,28 +8,27 @@ export interface GridLayout {
   tick: number;
 }
 
-export function computeGridLayout({
+export const computeGridLayout = ({
   shortSide,
   targetDivisions,
 }: {
   shortSide: number;
   targetDivisions: number;
-}): GridLayout {
+}): GridLayout => {
   const spacing = Math.round(shortSide / targetDivisions);
   const padding = Math.round(spacing * 0.7);
   const fontSize = Math.round(padding * 0.53);
   const strokeWidth = Math.max(2, Math.round(shortSide / 200));
   const tick = Math.round(padding * 0.35);
   return { spacing, padding, fontSize, strokeWidth, tick };
-}
+};
 
 /** Convert a 0-based index to a grid label: 0→'A', 1→'B', … */
-export function gridLabel(index: number): string {
-  return String.fromCharCode(65 + index);
-}
+export const gridLabel = (index: number): string =>
+  String.fromCharCode(65 + index);
 
 /** Convert a grid label back to a 0-based index: 'A'→0, 'B'→1, … */
-export function labelToIndex(label: string): number {
+export const labelToIndex = (label: string): number => {
   if (label.length !== 1) {
     throw new Error(
       `Grid label must be a single letter A–Z, got ${JSON.stringify(label)}`,
@@ -42,9 +41,9 @@ export function labelToIndex(label: string): number {
     );
   }
   return code - 65;
-}
+};
 
-function buildGridSvg({
+const buildGridSvg = ({
   totalWidth,
   totalHeight,
   layout,
@@ -52,7 +51,7 @@ function buildGridSvg({
   totalWidth: number;
   totalHeight: number;
   layout: GridLayout;
-}): string {
+}): string => {
   const { spacing, padding, fontSize, strokeWidth, tick } = layout;
   const parts: string[] = [];
 
@@ -80,8 +79,7 @@ function buildGridSvg({
   }
 
   // Label styling — bold white on the black margin for maximum contrast
-  const font =
-    `font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-weight="900" font-size="${fontSize}"`;
+  const font = `font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-weight="900" font-size="${fontSize}"`;
   const fill = 'fill="rgba(255,255,255,1)"';
 
   // Column labels — in the top margin, centered on each vertical grid line
@@ -102,15 +100,15 @@ function buildGridSvg({
 
   parts.push('</svg>');
   return parts.join('\n');
-}
+};
 
-export async function overlayGrid({
+export const overlayGrid = async ({
   imageBuffer,
   targetDivisions,
 }: {
   imageBuffer: Buffer;
   targetDivisions: number;
-}): Promise<Buffer> {
+}): Promise<Buffer> => {
   const metadata = await sharp(imageBuffer).metadata();
   const width = metadata.width ?? 0;
   const height = metadata.height ?? 0;
@@ -142,9 +140,9 @@ export async function overlayGrid({
     ])
     .png()
     .toBuffer();
-}
+};
 
-export function buildGridInstructions(layout: GridLayout): string {
+export const buildGridInstructions = (layout: GridLayout): string => {
   const { spacing, padding } = layout;
   const labels: string[] = [];
   for (let i = 1; i <= 26; i++) {
@@ -157,4 +155,4 @@ export function buildGridInstructions(layout: GridLayout): string {
     'Column labels run along the top (X axis), row labels along the left (Y axis).',
     'ALWAYS use the get_coordinates tool with these grid labels to determine exact pixel coordinates for any actions like tap, swipe, and long_press.',
   ].join(' ');
-}
+};

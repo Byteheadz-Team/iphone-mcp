@@ -65,15 +65,14 @@ export class MirroringService extends Module {
     }
 
     this.naturalScrolling = await this.client.isNaturalScrolling();
-    this.log.info(
-      `Natural scrolling: ${this.naturalScrolling ? 'ON' : 'OFF'}`,
-    );
+    this.log.info(`Natural scrolling: ${this.naturalScrolling ? 'ON' : 'OFF'}`);
 
     try {
       await this.client.ensureRunning();
       this.windowInfo = await this.client.getWindowInfo();
       this.gridLayout = computeGridLayout({
-        shortSide: Math.min(this.windowInfo.width, this.windowInfo.height) * SCALE,
+        shortSide:
+          Math.min(this.windowInfo.width, this.windowInfo.height) * SCALE,
         targetDivisions: TARGET_DIVISIONS,
       });
     } catch (err: unknown) {
@@ -199,7 +198,9 @@ export class MirroringService extends Module {
 
   getGridLayout(): GridLayout {
     if (!this.gridLayout) {
-      throw new Error('Grid layout not available — MirroringService has not started');
+      throw new Error(
+        'Grid layout not available — MirroringService has not started',
+      );
     }
     return this.gridLayout;
   }
@@ -237,7 +238,8 @@ export class MirroringService extends Module {
     await this.ensureReady();
     this.windowInfo = await this.client.getWindowInfo();
     this.gridLayout = computeGridLayout({
-      shortSide: Math.min(this.windowInfo.width, this.windowInfo.height) * SCALE,
+      shortSide:
+        Math.min(this.windowInfo.width, this.windowInfo.height) * SCALE,
       targetDivisions: TARGET_DIVISIONS,
     });
     return this.windowInfo;

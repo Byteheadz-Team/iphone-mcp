@@ -23,6 +23,7 @@ Run a single test file: `yarn vitest run src/path/to/file.test.ts`
 - `type` imports must use inline syntax: `import { type Foo } from '@lib/bar'`
 - Import order enforced by eslint: builtins, externals, internals (aliases), parent, sibling — with blank lines between groups, alphabetized.
 - Node built-in imports always use `node:` prefix (e.g. `node:net`, `node:tls`).
+- Arrow functions only — never use hoisted `function` declarations. Use `const fn = () => {}`.
 - Single quotes, 2-space indent, trailing commas (prettier handles this).
 
 ## Architecture

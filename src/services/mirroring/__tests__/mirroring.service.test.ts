@@ -2,7 +2,11 @@ import { execFile as execFileCb } from 'node:child_process';
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { type MirroringClient, SwipeEasing, computeGridLayout } from '@lib/mirroring';
+import {
+  type MirroringClient,
+  SwipeEasing,
+  computeGridLayout,
+} from '@lib/mirroring';
 import config from '~/config';
 
 import { MirroringService } from '../mirroring.service';
@@ -13,29 +17,27 @@ vi.mock('node:child_process', () => ({
 
 const resolved = Promise.resolve();
 
-function createMockClient() {
-  return {
-    ensureRunning: vi.fn().mockReturnValue(resolved),
-    getWindowInfo: vi.fn().mockResolvedValue({
-      x: 100,
-      y: 200,
-      width: 400,
-      height: 800,
-      windowId: 42,
-    }),
-    captureWindow: vi.fn().mockResolvedValue(Buffer.from('fake-png')),
-    postClick: vi.fn().mockReturnValue(resolved),
-    postLongPress: vi.fn().mockReturnValue(resolved),
-    postDrag: vi.fn().mockReturnValue(resolved),
-    postScroll: vi.fn().mockReturnValue(resolved),
-    typeText: vi.fn().mockReturnValue(resolved),
-    sendShortcut: vi.fn().mockReturnValue(resolved),
-    checkAccessibilityPermission: vi.fn().mockResolvedValue(true),
-    checkScreenRecordingPermission: vi.fn().mockResolvedValue(true),
-    isNaturalScrolling: vi.fn().mockResolvedValue(true),
-    getHostAppName: vi.fn().mockResolvedValue('TestApp'),
-  };
-}
+const createMockClient = () => ({
+  ensureRunning: vi.fn().mockReturnValue(resolved),
+  getWindowInfo: vi.fn().mockResolvedValue({
+    x: 100,
+    y: 200,
+    width: 400,
+    height: 800,
+    windowId: 42,
+  }),
+  captureWindow: vi.fn().mockResolvedValue(Buffer.from('fake-png')),
+  postClick: vi.fn().mockReturnValue(resolved),
+  postLongPress: vi.fn().mockReturnValue(resolved),
+  postDrag: vi.fn().mockReturnValue(resolved),
+  postScroll: vi.fn().mockReturnValue(resolved),
+  typeText: vi.fn().mockReturnValue(resolved),
+  sendShortcut: vi.fn().mockReturnValue(resolved),
+  checkAccessibilityPermission: vi.fn().mockResolvedValue(true),
+  checkScreenRecordingPermission: vi.fn().mockResolvedValue(true),
+  isNaturalScrolling: vi.fn().mockResolvedValue(true),
+  getHostAppName: vi.fn().mockResolvedValue('TestApp'),
+});
 
 describe('MirroringService', () => {
   beforeEach(() => {
@@ -130,7 +132,10 @@ describe('MirroringService', () => {
       await service.start();
 
       // computeGridLayout(800, 5) → padding=112
-      const p = computeGridLayout({ shortSide: 800, targetDivisions: config.mirroring.overlayGridDivisions }).padding;
+      const p = computeGridLayout({
+        shortSide: 800,
+        targetDivisions: config.mirroring.overlayGridDivisions,
+      }).padding;
       // Screenshot pixel (200, 400) at 2x with window at (100, 200), grid padding offset
       await service.tap({ x: 200, y: 400 });
 
@@ -147,8 +152,18 @@ describe('MirroringService', () => {
       const service = new MirroringService(mock as unknown as MirroringClient);
       await service.start();
 
-      const p = computeGridLayout({ shortSide: 800, targetDivisions: config.mirroring.overlayGridDivisions }).padding;
-      await service.swipe({ startX: 100, startY: 200, endX: 100, endY: 600, duration: 500, easing: SwipeEasing.Linear });
+      const p = computeGridLayout({
+        shortSide: 800,
+        targetDivisions: config.mirroring.overlayGridDivisions,
+      }).padding;
+      await service.swipe({
+        startX: 100,
+        startY: 200,
+        endX: 100,
+        endY: 600,
+        duration: 500,
+        easing: SwipeEasing.Linear,
+      });
 
       expect(mock.postDrag).toHaveBeenCalledWith({
         startX: 100 + (100 - p) / 2,
@@ -167,7 +182,10 @@ describe('MirroringService', () => {
       const service = new MirroringService(mock as unknown as MirroringClient);
       await service.start();
 
-      const p = computeGridLayout({ shortSide: 800, targetDivisions: config.mirroring.overlayGridDivisions }).padding;
+      const p = computeGridLayout({
+        shortSide: 800,
+        targetDivisions: config.mirroring.overlayGridDivisions,
+      }).padding;
       await service.scroll({ x: 200, y: 400, deltaX: 10, deltaY: -50 });
 
       const s = config.mirroring.scrollSpeed;
@@ -185,7 +203,10 @@ describe('MirroringService', () => {
       const service = new MirroringService(mock as unknown as MirroringClient);
       await service.start();
 
-      const p = computeGridLayout({ shortSide: 800, targetDivisions: config.mirroring.overlayGridDivisions }).padding;
+      const p = computeGridLayout({
+        shortSide: 800,
+        targetDivisions: config.mirroring.overlayGridDivisions,
+      }).padding;
       await service.scroll({ x: 200, y: 400, deltaX: 10, deltaY: -50 });
 
       const s = config.mirroring.scrollSpeed;
@@ -222,7 +243,10 @@ describe('MirroringService', () => {
         width: 800,
         height: 1600,
         scale: 2,
-        gridPadding: computeGridLayout({ shortSide: 800, targetDivisions: config.mirroring.overlayGridDivisions }).padding,
+        gridPadding: computeGridLayout({
+          shortSide: 800,
+          targetDivisions: config.mirroring.overlayGridDivisions,
+        }).padding,
       });
     });
 
@@ -243,7 +267,10 @@ describe('MirroringService', () => {
       const service = new MirroringService(mock as unknown as MirroringClient);
       await service.start();
 
-      const p = computeGridLayout({ shortSide: 800, targetDivisions: config.mirroring.overlayGridDivisions }).padding;
+      const p = computeGridLayout({
+        shortSide: 800,
+        targetDivisions: config.mirroring.overlayGridDivisions,
+      }).padding;
       await service.longPress({ x: 200, y: 400, durationMs: 1500 });
 
       expect(mock.postLongPress).toHaveBeenCalledWith({
@@ -264,7 +291,10 @@ describe('MirroringService', () => {
 
       // Mock window width=400, scale=2 → imageWidth=800
       expect(layout).toEqual(
-        computeGridLayout({ shortSide: 800, targetDivisions: config.mirroring.overlayGridDivisions }),
+        computeGridLayout({
+          shortSide: 800,
+          targetDivisions: config.mirroring.overlayGridDivisions,
+        }),
       );
     });
 
@@ -272,7 +302,9 @@ describe('MirroringService', () => {
       const mock = createMockClient();
       const service = new MirroringService(mock as unknown as MirroringClient);
 
-      expect(() => service.getGridLayout()).toThrow('Grid layout not available');
+      expect(() => service.getGridLayout()).toThrow(
+        'Grid layout not available',
+      );
     });
   });
 

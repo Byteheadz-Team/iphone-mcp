@@ -2,10 +2,10 @@ import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 import { type MirroringService } from '@services/mirroring/mirroring.service';
 
-export function registerScreenshotTools(
+export const registerScreenshotTools = (
   server: McpServer,
   mirroringService: MirroringService,
-): void {
+): void => {
   server.registerTool(
     'screenshot',
     {
@@ -63,4 +63,4 @@ export function registerScreenshotTools(
       }
     },
   );
-}
+};

@@ -9,7 +9,7 @@ const percentSchema = z
     'Percentage offset (0–100). Accepts a number or a string (trailing "%" is stripped).',
   );
 
-function parsePercent(value: number | string): number {
+const parsePercent = (value: number | string): number => {
   const str = String(value).replace(/%$/, '').trim();
   const num = Number(str);
   if (!Number.isFinite(num)) {
@@ -19,15 +19,15 @@ function parsePercent(value: number | string): number {
     throw new Error(`Percentage must be between 0 and 100, got ${num}`);
   }
   return num;
-}
+};
 
-export function registerCoordinateTools({
+export const registerCoordinateTools = ({
   server,
   getGridLayout,
 }: {
   server: McpServer;
   getGridLayout: () => GridLayout;
-}): void {
+}): void => {
   server.registerTool(
     'get_coordinates',
     {
@@ -81,4 +81,4 @@ export function registerCoordinateTools({
       }
     },
   );
-}
+};
