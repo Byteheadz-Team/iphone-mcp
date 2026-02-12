@@ -43,7 +43,7 @@ export function registerAutomationTools(
     },
     async ({ x, y, screenshotDelay }) => {
       try {
-        await mirroringService.tap(x, y);
+        await mirroringService.tap({ x, y });
         return withScreenshotAfter(
           mirroringService,
           screenshotDelay,
@@ -73,7 +73,7 @@ export function registerAutomationTools(
     async ({ x, y, duration, screenshotDelay }) => {
       try {
         const durationMs = Math.round(duration * 1000);
-        await mirroringService.longPress(x, y, durationMs);
+        await mirroringService.longPress({ x, y, durationMs });
         return withScreenshotAfter(
           mirroringService,
           screenshotDelay,
@@ -123,14 +123,14 @@ export function registerAutomationTools(
       screenshotDelay,
     }) => {
       try {
-        await mirroringService.swipe(
+        await mirroringService.swipe({
           startX,
           startY,
           endX,
           endY,
           duration,
           easing,
-        );
+        });
         return withScreenshotAfter(
           mirroringService,
           screenshotDelay,

@@ -7,7 +7,9 @@
  * Run with: yarn doctor
  */
 
-import { access } from 'node:fs/promises';
+import { access, readFile, unlink } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 import { MirroringClient } from '@lib/mirroring';
 import { execFile } from '@lib/utils';
@@ -122,14 +124,11 @@ $.AXIsProcessTrusted();
 }
 
 async function checkScreenRecordingPermission(appName: string): Promise<void> {
+  const probe = join(tmpdir(), `screc-probe-${Date.now()}.png`);
   try {
-    const { stdout } = await execFile('osascript', [
-      '-l',
-      'JavaScript',
-      '-e',
-      'ObjC.import("CoreGraphics"); $.CGPreflightScreenCaptureAccess()',
-    ]);
-    if (stdout.trim() === 'true') {
+    await execFile('screencapture', ['-x', '-t', 'png', probe]);
+    const buf = await readFile(probe);
+    if (buf.length > 0) {
       pass('Screen Recording permission granted');
     } else {
       warn(
@@ -142,6 +141,8 @@ async function checkScreenRecordingPermission(appName: string): Promise<void> {
       'Could not check Screen Recording permission',
       `Screenshots require Screen Recording access — add ${appName} in System Settings`,
     );
+  } finally {
+    await unlink(probe).catch(() => {});
   }
 }
 

@@ -1,10 +1,13 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
-import { buildGridInstructions } from '@lib/mirroring';
+import { buildGridInstructions, computeGridLayout } from '@lib/mirroring';
 import { Module } from '@lib/utils';
 import { type MirroringService } from '@services/mirroring/mirroring.service';
 import config from '~/config';
+
+const TARGET_DIVISIONS = config.mirroring.overlayGridDivisions;
+const REFERENCE_WIDTH = config.mirroring.referenceWidth;
 
 import { registerAutomationTools } from './tools/automation-tools';
 import { registerCoordinateTools } from './tools/coordinate-tools';
@@ -22,6 +25,10 @@ export class McpServerModule extends Module {
 
   constructor(private deps: McpServerDependencies) {
     super();
+    const refLayout = computeGridLayout({
+      shortSide: REFERENCE_WIDTH,
+      targetDivisions: TARGET_DIVISIONS,
+    });
     this.server = new McpServer(
       {
         name: config.name,
@@ -32,10 +39,7 @@ export class McpServerModule extends Module {
           'Always take a screenshot before performing any action to ensure you have an up-to-date view of the screen.',
           'Always use the type_text tool to enter text. Do not wait for the on-screen keyboard to appear — it will not be visible in screenshots, but type_text will still work.',
           'ALWAYS use the get_coordinates tool to convert grid positions to pixel coordinates for tap/swipe/long_press. Use the calculate tool only for non-coordinate arithmetic.',
-          buildGridInstructions(
-            config.mirroring.overlayGridSpacing,
-            config.mirroring.overlayGridPadding,
-          ),
+          buildGridInstructions(refLayout),
         ].join('\n'),
       },
     );
@@ -47,7 +51,10 @@ export class McpServerModule extends Module {
     registerAutomationTools(this.server, this.deps.mirroringService);
     registerMirroringControlTools(this.server, this.deps.mirroringService);
     registerMathTools(this.server);
-    registerCoordinateTools(this.server);
+    registerCoordinateTools({
+      server: this.server,
+      getGridLayout: () => this.deps.mirroringService.getGridLayout(),
+    });
   }
 
   override async start(): Promise<void> {

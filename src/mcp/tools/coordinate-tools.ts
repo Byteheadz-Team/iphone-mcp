@@ -1,7 +1,7 @@
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 
-import config from '~/config';
+import { type GridLayout, labelToIndex } from '@lib/mirroring';
 
 const percentSchema = z
   .union([z.number(), z.string()])
@@ -21,29 +21,13 @@ function parsePercent(value: number | string): number {
   return num;
 }
 
-function labelToIndex(label: string): number {
-  if (label.length !== 1) {
-    throw new Error(
-      `Grid label must be a single letter A–Z, got ${JSON.stringify(label)}`,
-    );
-  }
-  const code = label.toUpperCase().charCodeAt(0);
-  if (code < 65 || code > 90) {
-    throw new Error(
-      `Grid label must be a letter A–Z, got ${JSON.stringify(label)}`,
-    );
-  }
-  return code - 64; // A=1, B=2, ...
-}
-
-function labelPixel(index: number, padding: number, spacing: number): number {
-  return padding + index * spacing;
-}
-
-export function registerCoordinateTools(server: McpServer): void {
-  const { overlayGridSpacing: spacing, overlayGridPadding: padding } =
-    config.mirroring;
-
+export function registerCoordinateTools({
+  server,
+  getGridLayout,
+}: {
+  server: McpServer;
+  getGridLayout: () => GridLayout;
+}): void {
   server.registerTool(
     'get_coordinates',
     {
@@ -72,16 +56,17 @@ export function registerCoordinateTools(server: McpServer): void {
     },
     ({ column, row, xPercent, yPercent }) => {
       try {
+        const { spacing, padding } = getGridLayout();
         const colIndex = labelToIndex(column);
         const rowIndex = labelToIndex(row);
         const xPct = parsePercent(xPercent);
         const yPct = parsePercent(yPercent);
 
         const x = Math.round(
-          labelPixel(colIndex, padding, spacing) + (xPct / 100) * spacing,
+          padding + colIndex * spacing + (xPct / 100) * spacing,
         );
         const y = Math.round(
-          labelPixel(rowIndex, padding, spacing) + (yPct / 100) * spacing,
+          padding + rowIndex * spacing + (yPct / 100) * spacing,
         );
 
         return {

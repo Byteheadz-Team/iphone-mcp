@@ -101,12 +101,15 @@ JSON.stringify({ x, y, width, height, windowId });
     return info;
   }
 
-  async captureWindow(
-    windowId: number,
-    targetWidth?: number,
-    overlayGridSpacing?: number,
-    overlayGridPadding?: number,
-  ): Promise<Buffer> {
+  async captureWindow({
+    windowId,
+    targetWidth,
+    gridDivisions,
+  }: {
+    windowId: number;
+    targetWidth?: number;
+    gridDivisions?: number;
+  }): Promise<Buffer> {
     const tmpPath = join(tmpdir(), `iphone-mcp-screenshot-${Date.now()}.png`);
 
     try {
@@ -134,8 +137,8 @@ JSON.stringify({ x, y, width, height, windowId });
       const buffer = await readFile(tmpPath);
 
       // Overlay grid lines and labels for coordinate reference.
-      if (overlayGridSpacing && overlayGridPadding) {
-        return overlayGrid(buffer, overlayGridSpacing, overlayGridPadding);
+      if (gridDivisions) {
+        return overlayGrid({ imageBuffer: buffer, targetDivisions: gridDivisions });
       }
 
       return buffer;
@@ -146,7 +149,7 @@ JSON.stringify({ x, y, width, height, windowId });
     }
   }
 
-  async postClick(x: number, y: number): Promise<void> {
+  async postClick({ x, y }: { x: number; y: number }): Promise<void> {
     await this.activate();
 
     const script = `
@@ -162,7 +165,15 @@ $.CGEventPost($.kCGHIDEventTap, mouseUp);
     await execFile('osascript', ['-l', 'JavaScript', '-e', script]);
   }
 
-  async postLongPress(x: number, y: number, durationMs: number): Promise<void> {
+  async postLongPress({
+    x,
+    y,
+    durationMs,
+  }: {
+    x: number;
+    y: number;
+    durationMs: number;
+  }): Promise<void> {
     await this.activate();
 
     const delaySec = durationMs / 1000;
@@ -181,14 +192,21 @@ $.CGEventPost($.kCGHIDEventTap, mouseUp);
     });
   }
 
-  async postDrag(
-    startX: number,
-    startY: number,
-    endX: number,
-    endY: number,
-    durationMs: number,
-    easing: SwipeEasing = SwipeEasing.Linear,
-  ): Promise<void> {
+  async postDrag({
+    startX,
+    startY,
+    endX,
+    endY,
+    durationMs,
+    easing = SwipeEasing.Linear,
+  }: {
+    startX: number;
+    startY: number;
+    endX: number;
+    endY: number;
+    durationMs: number;
+    easing?: SwipeEasing;
+  }): Promise<void> {
     await this.activate();
 
     const steps = Math.max(Math.round(durationMs / 16), 5);
@@ -323,17 +341,15 @@ $.AXIsProcessTrustedWithOptions(options);
   }
 
   async checkScreenRecordingPermission(): Promise<boolean> {
-    const script = `
-ObjC.import('CoreGraphics');
-$.CGRequestScreenCaptureAccess();
-`;
-
-    const { stdout } = await execFile('osascript', [
-      '-l',
-      'JavaScript',
-      '-e',
-      script,
-    ]);
-    return stdout.trim() === 'true';
+    const probe = join(tmpdir(), `screc-probe-${Date.now()}.png`);
+    try {
+      await execFile('screencapture', ['-x', '-t', 'png', probe]);
+      const buf = await readFile(probe);
+      return buf.length > 0;
+    } catch {
+      return false;
+    } finally {
+      await unlink(probe).catch(() => {});
+    }
   }
 }

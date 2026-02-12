@@ -119,7 +119,7 @@ describe('MirroringClient', () => {
       unlinkMock.mockReturnValue(Promise.resolve());
 
       const client = new MirroringClient();
-      const result = await client.captureWindow(42, 400);
+      const result = await client.captureWindow({ windowId: 42, targetWidth: 400 });
 
       expect(result).toEqual(fakeImage);
       // First call: screencapture
@@ -143,7 +143,7 @@ describe('MirroringClient', () => {
       const mock = mockExecFileSequence(['', '']);
 
       const client = new MirroringClient();
-      await client.postClick(150, 300);
+      await client.postClick({ x: 150, y: 300 });
 
       expect(mock).toHaveBeenCalledTimes(2);
 
@@ -162,7 +162,7 @@ describe('MirroringClient', () => {
       const mock = mockExecFileSequence(['', '']);
 
       const client = new MirroringClient();
-      await client.postDrag(100, 200, 100, 400, 500);
+      await client.postDrag({ startX: 100, startY: 200, endX: 100, endY: 400, durationMs: 500 });
 
       expect(mock).toHaveBeenCalledTimes(2);
 
@@ -179,7 +179,7 @@ describe('MirroringClient', () => {
       const mock = mockExecFileSequence(['', '']);
 
       const client = new MirroringClient();
-      await client.postDrag(0, 0, 0, 100, 500);
+      await client.postDrag({ startX: 0, startY: 0, endX: 0, endY: 100, durationMs: 500 });
 
       const dragScript = getCallScript(mock, 1);
       expect(dragScript).toContain("const easing = 'linear'");
@@ -190,7 +190,7 @@ describe('MirroringClient', () => {
       const mock = mockExecFileSequence(['', '']);
 
       const client = new MirroringClient();
-      await client.postDrag(0, 0, 0, 100, 500);
+      await client.postDrag({ startX: 0, startY: 0, endX: 0, endY: 100, durationMs: 500 });
 
       const dragScript = getCallScript(mock, 1);
       expect(dragScript).toContain('delay(0.03)');
@@ -200,7 +200,7 @@ describe('MirroringClient', () => {
       const mock = mockExecFileSequence(['', '']);
 
       const client = new MirroringClient();
-      await client.postDrag(0, 0, 0, 100, 500, SwipeEasing.EaseIn);
+      await client.postDrag({ startX: 0, startY: 0, endX: 0, endY: 100, durationMs: 500, easing: SwipeEasing.EaseIn });
 
       const dragScript = getCallScript(mock, 1);
       expect(dragScript).toContain("const easing = 'ease-in'");
@@ -239,7 +239,7 @@ describe('MirroringClient', () => {
       const mock = mockExecFileSequence(['', '']);
 
       const client = new MirroringClient();
-      await client.postLongPress(120, 250, 1500);
+      await client.postLongPress({ x: 120, y: 250, durationMs: 1500 });
 
       expect(mock).toHaveBeenCalledTimes(2);
 
@@ -257,7 +257,7 @@ describe('MirroringClient', () => {
       const mock = mockExecFileSequence(['', '']);
 
       const client = new MirroringClient();
-      await client.postLongPress(0, 0, 3000);
+      await client.postLongPress({ x: 0, y: 0, durationMs: 3000 });
 
       // The long-press call (second) should include an options object with timeout
       const longPressCall = mock.mock.calls[1] as unknown[];
@@ -403,8 +403,12 @@ describe('MirroringClient', () => {
   });
 
   describe('checkScreenRecordingPermission', () => {
-    it('returns true when CGRequestScreenCaptureAccess returns true', async () => {
-      mockExecFile('true\n');
+    it('returns true when screencapture produces a non-empty file', async () => {
+      mockExecFile('');
+      const readMock = readFile as unknown as ExecFileMock;
+      readMock.mockResolvedValue(Buffer.from('png-data'));
+      const unlinkMock = unlink as unknown as ExecFileMock;
+      unlinkMock.mockReturnValue(Promise.resolve());
 
       const client = new MirroringClient();
       const result = await client.checkScreenRecordingPermission();
@@ -412,8 +416,12 @@ describe('MirroringClient', () => {
       expect(result).toBe(true);
     });
 
-    it('returns false when CGRequestScreenCaptureAccess returns false', async () => {
-      mockExecFile('false\n');
+    it('returns false when screencapture produces an empty file', async () => {
+      mockExecFile('');
+      const readMock = readFile as unknown as ExecFileMock;
+      readMock.mockResolvedValue(Buffer.alloc(0));
+      const unlinkMock = unlink as unknown as ExecFileMock;
+      unlinkMock.mockReturnValue(Promise.resolve());
 
       const client = new MirroringClient();
       const result = await client.checkScreenRecordingPermission();
@@ -421,14 +429,34 @@ describe('MirroringClient', () => {
       expect(result).toBe(false);
     });
 
-    it('uses CGRequestScreenCaptureAccess to trigger system dialog', async () => {
-      const mock = mockExecFile('true\n');
+    it('returns false when screencapture fails', async () => {
+      const mock = execFileCb as unknown as ExecFileMock;
+      mock.mockImplementation((...args: unknown[]) => {
+        findCallback(args)(new Error('screencapture failed'), {
+          stdout: '',
+          stderr: '',
+        });
+      });
+      const unlinkMock = unlink as unknown as ExecFileMock;
+      unlinkMock.mockReturnValue(Promise.resolve());
+
+      const client = new MirroringClient();
+      const result = await client.checkScreenRecordingPermission();
+
+      expect(result).toBe(false);
+    });
+
+    it('cleans up the probe file after checking', async () => {
+      mockExecFile('');
+      const readMock = readFile as unknown as ExecFileMock;
+      readMock.mockResolvedValue(Buffer.from('png-data'));
+      const unlinkMock = unlink as unknown as ExecFileMock;
+      unlinkMock.mockReturnValue(Promise.resolve());
 
       const client = new MirroringClient();
       await client.checkScreenRecordingPermission();
 
-      const script = getCallScript(mock, 0);
-      expect(script).toContain('CGRequestScreenCaptureAccess');
+      expect(unlinkMock).toHaveBeenCalled();
     });
   });
 });

@@ -2,7 +2,12 @@ import { execFile as execFileCb } from 'node:child_process';
 
 import { z } from 'zod';
 
-import { MirroringClient, type WindowInfo } from '@lib/mirroring';
+import {
+  type GridLayout,
+  MirroringClient,
+  type WindowInfo,
+  computeGridLayout,
+} from '@lib/mirroring';
 import { Module, execFile } from '@lib/utils';
 import config from '~/config';
 
@@ -11,9 +16,8 @@ import { type ButtonName, SwipeEasing } from './mirroring.types';
 const coordinateSchema = z.number().finite();
 
 const SCALE = config.mirroring.screenshotScale;
-const GRID_SPACING = config.mirroring.overlayGridSpacing;
-const GRID_PADDING = config.mirroring.overlayGridPadding;
-const COORD_OFFSET = GRID_SPACING ? GRID_PADDING : 0;
+const TARGET_DIVISIONS = config.mirroring.overlayGridDivisions;
+const REFERENCE_WIDTH = config.mirroring.referenceWidth;
 
 export interface ScreenInfo {
   width: number;
@@ -25,6 +29,7 @@ export interface ScreenInfo {
 export class MirroringService extends Module {
   private client: MirroringClient;
   private windowInfo: WindowInfo | null = null;
+  private gridLayout: GridLayout | null = null;
   readonly permissionWarnings = {
     accessibility: null as string | null,
     screenRecording: null as string | null,
@@ -60,6 +65,10 @@ export class MirroringService extends Module {
     try {
       await this.client.ensureRunning();
       this.windowInfo = await this.client.getWindowInfo();
+      this.gridLayout = computeGridLayout({
+        shortSide: Math.min(this.windowInfo.width, this.windowInfo.height) * SCALE,
+        targetDivisions: TARGET_DIVISIONS,
+      });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       this.log.warn(
@@ -82,50 +91,65 @@ export class MirroringService extends Module {
 
   override async stop(): Promise<void> {
     this.windowInfo = null;
+    this.gridLayout = null;
     await super.stop();
   }
 
   async takeScreenshot(): Promise<Buffer> {
     const info = await this.refreshWindowInfo();
-    return this.client.captureWindow(
-      info.windowId,
-      info.width * SCALE,
-      GRID_SPACING,
-      GRID_PADDING,
-    );
+    return this.client.captureWindow({
+      windowId: info.windowId,
+      targetWidth: info.width * SCALE,
+      gridDivisions: TARGET_DIVISIONS,
+    });
   }
 
-  async tap(x: number, y: number): Promise<void> {
+  async tap({ x, y }: { x: number; y: number }): Promise<void> {
     const info = await this.refreshWindowInfo();
-    const screen = this.toScreenCoords(info, x, y);
-    await this.client.postClick(screen.x, screen.y);
+    const screen = this.toScreenCoords({ info, pixelX: x, pixelY: y });
+    await this.client.postClick(screen);
   }
 
-  async longPress(x: number, y: number, durationMs: number): Promise<void> {
+  async longPress({
+    x,
+    y,
+    durationMs,
+  }: {
+    x: number;
+    y: number;
+    durationMs: number;
+  }): Promise<void> {
     const info = await this.refreshWindowInfo();
-    const screen = this.toScreenCoords(info, x, y);
-    await this.client.postLongPress(screen.x, screen.y, durationMs);
+    const screen = this.toScreenCoords({ info, pixelX: x, pixelY: y });
+    await this.client.postLongPress({ ...screen, durationMs });
   }
 
-  async swipe(
-    startX: number,
-    startY: number,
-    endX: number,
-    endY: number,
-    duration?: number,
-    easing?: SwipeEasing,
-  ): Promise<void> {
+  async swipe({
+    startX,
+    startY,
+    endX,
+    endY,
+    duration,
+    easing,
+  }: {
+    startX: number;
+    startY: number;
+    endX: number;
+    endY: number;
+    duration?: number;
+    easing?: SwipeEasing;
+  }): Promise<void> {
     const info = await this.refreshWindowInfo();
-    const start = this.toScreenCoords(info, startX, startY);
-    const end = this.toScreenCoords(info, endX, endY);
-    await this.client.postDrag(
-      start.x,
-      start.y,
-      end.x,
-      end.y,
-      duration ?? 500,
-      easing ?? SwipeEasing.Linear,
-    );
+    const start = this.toScreenCoords({ info, pixelX: startX, pixelY: startY });
+    const end = this.toScreenCoords({ info, pixelX: endX, pixelY: endY });
+    await this.client.postDrag({
+      startX: start.x,
+      startY: start.y,
+      endX: end.x,
+      endY: end.y,
+      durationMs: duration ?? 500,
+      easing: easing ?? SwipeEasing.Linear,
+    });
   }
 
   async typeText(text: string): Promise<void> {
@@ -141,13 +165,23 @@ export class MirroringService extends Module {
     await this.client.sendShortcut(shortcuts[button]);
   }
 
+  getGridLayout(): GridLayout {
+    return (
+      this.gridLayout ??
+      computeGridLayout({
+        shortSide: REFERENCE_WIDTH,
+        targetDivisions: TARGET_DIVISIONS,
+      })
+    );
+  }
+
   async getScreenInfo(): Promise<ScreenInfo> {
     const info = await this.refreshWindowInfo();
     return {
       width: info.width * SCALE,
       height: info.height * SCALE,
       scale: SCALE,
-      gridPadding: COORD_OFFSET,
+      gridPadding: this.getGridLayout().padding,
     };
   }
 
@@ -173,20 +207,29 @@ export class MirroringService extends Module {
   private async refreshWindowInfo(): Promise<WindowInfo> {
     await this.ensureReady();
     this.windowInfo = await this.client.getWindowInfo();
+    this.gridLayout = computeGridLayout({
+      shortSide: Math.min(this.windowInfo.width, this.windowInfo.height) * SCALE,
+      targetDivisions: TARGET_DIVISIONS,
+    });
     return this.windowInfo;
   }
 
-  private toScreenCoords(
-    info: WindowInfo,
-    pixelX: number,
-    pixelY: number,
-  ): { x: number; y: number } {
+  private toScreenCoords({
+    info,
+    pixelX,
+    pixelY,
+  }: {
+    info: WindowInfo;
+    pixelX: number;
+    pixelY: number;
+  }): { x: number; y: number } {
     coordinateSchema.parse(pixelX);
     coordinateSchema.parse(pixelY);
 
+    const offset = this.getGridLayout().padding;
     return {
-      x: info.x + (pixelX - COORD_OFFSET) / SCALE,
-      y: info.y + (pixelY - COORD_OFFSET) / SCALE,
+      x: info.x + (pixelX - offset) / SCALE,
+      y: info.y + (pixelY - offset) / SCALE,
     };
   }
 }

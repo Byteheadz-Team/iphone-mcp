@@ -2,7 +2,7 @@ import { execFile as execFileCb } from 'node:child_process';
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { type MirroringClient, SwipeEasing } from '@lib/mirroring';
+import { type MirroringClient, SwipeEasing, computeGridLayout } from '@lib/mirroring';
 import config from '~/config';
 
 import { MirroringService } from '../mirroring.service';
@@ -112,12 +112,11 @@ describe('MirroringService', () => {
 
       const result = await service.takeScreenshot();
 
-      expect(mock.captureWindow).toHaveBeenCalledWith(
-        42,
-        800,
-        config.mirroring.overlayGridSpacing,
-        config.mirroring.overlayGridPadding,
-      );
+      expect(mock.captureWindow).toHaveBeenCalledWith({
+        windowId: 42,
+        targetWidth: 800,
+        gridDivisions: config.mirroring.overlayGridDivisions,
+      });
       expect(Buffer.isBuffer(result)).toBe(true);
     });
   });
@@ -128,15 +127,15 @@ describe('MirroringService', () => {
       const service = new MirroringService(mock as unknown as MirroringClient);
       await service.start();
 
-      const p = config.mirroring.overlayGridPadding;
+      // computeGridLayout(800, 5) → padding=112
+      const p = computeGridLayout({ shortSide: 800, targetDivisions: config.mirroring.overlayGridDivisions }).padding;
       // Screenshot pixel (200, 400) at 2x with window at (100, 200), grid padding offset
-      // -> screen coords: (100 + (200-p)/2, 200 + (400-p)/2) = (180, 380)
-      await service.tap(200, 400);
+      await service.tap({ x: 200, y: 400 });
 
-      expect(mock.postClick).toHaveBeenCalledWith(
-        100 + (200 - p) / 2,
-        200 + (400 - p) / 2,
-      );
+      expect(mock.postClick).toHaveBeenCalledWith({
+        x: 100 + (200 - p) / 2,
+        y: 200 + (400 - p) / 2,
+      });
     });
   });
 
@@ -146,17 +145,17 @@ describe('MirroringService', () => {
       const service = new MirroringService(mock as unknown as MirroringClient);
       await service.start();
 
-      const p = config.mirroring.overlayGridPadding;
-      await service.swipe(100, 200, 100, 600, 500, SwipeEasing.Linear);
+      const p = computeGridLayout({ shortSide: 800, targetDivisions: config.mirroring.overlayGridDivisions }).padding;
+      await service.swipe({ startX: 100, startY: 200, endX: 100, endY: 600, duration: 500, easing: SwipeEasing.Linear });
 
-      expect(mock.postDrag).toHaveBeenCalledWith(
-        100 + (100 - p) / 2,
-        200 + (200 - p) / 2,
-        100 + (100 - p) / 2,
-        200 + (600 - p) / 2,
-        500,
-        SwipeEasing.Linear,
-      );
+      expect(mock.postDrag).toHaveBeenCalledWith({
+        startX: 100 + (100 - p) / 2,
+        startY: 200 + (200 - p) / 2,
+        endX: 100 + (100 - p) / 2,
+        endY: 200 + (600 - p) / 2,
+        durationMs: 500,
+        easing: SwipeEasing.Linear,
+      });
     });
   });
 
@@ -184,7 +183,7 @@ describe('MirroringService', () => {
         width: 800,
         height: 1600,
         scale: 2,
-        gridPadding: config.mirroring.overlayGridPadding,
+        gridPadding: computeGridLayout({ shortSide: 800, targetDivisions: config.mirroring.overlayGridDivisions }).padding,
       });
     });
 
@@ -205,13 +204,42 @@ describe('MirroringService', () => {
       const service = new MirroringService(mock as unknown as MirroringClient);
       await service.start();
 
-      const p = config.mirroring.overlayGridPadding;
-      await service.longPress(200, 400, 1500);
+      const p = computeGridLayout({ shortSide: 800, targetDivisions: config.mirroring.overlayGridDivisions }).padding;
+      await service.longPress({ x: 200, y: 400, durationMs: 1500 });
 
-      expect(mock.postLongPress).toHaveBeenCalledWith(
-        100 + (200 - p) / 2,
-        200 + (400 - p) / 2,
-        1500,
+      expect(mock.postLongPress).toHaveBeenCalledWith({
+        x: 100 + (200 - p) / 2,
+        y: 200 + (400 - p) / 2,
+        durationMs: 1500,
+      });
+    });
+  });
+
+  describe('getGridLayout', () => {
+    it('returns computed layout after start', async () => {
+      const mock = createMockClient();
+      const service = new MirroringService(mock as unknown as MirroringClient);
+      await service.start();
+
+      const layout = service.getGridLayout();
+
+      // Mock window width=400, scale=2 → imageWidth=800
+      expect(layout).toEqual(
+        computeGridLayout({ shortSide: 800, targetDivisions: config.mirroring.overlayGridDivisions }),
+      );
+    });
+
+    it('returns reference layout before start', () => {
+      const mock = createMockClient();
+      const service = new MirroringService(mock as unknown as MirroringClient);
+
+      const layout = service.getGridLayout();
+
+      expect(layout).toEqual(
+        computeGridLayout({
+          shortSide: config.mirroring.referenceWidth,
+          targetDivisions: config.mirroring.overlayGridDivisions,
+        }),
       );
     });
   });

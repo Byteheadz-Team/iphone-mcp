@@ -8,7 +8,7 @@ Uses **iPhone Mirroring** (macOS Sequoia 15+) instead of WebDriverAgent, so ther
 
 ```bash
 # 1. Clone and build
-git clone https://github.com/user/iphone-mcp.git
+git clone https://github.com/yev-yev-yev/iphone-mcp.git
 cd iphone-mcp
 corepack enable
 yarn install
@@ -56,7 +56,7 @@ The application hosting the MCP server (e.g. Terminal, VS Code, Claude Desktop) 
 | **Accessibility**    | Tap, swipe, type (CGEvent injection) | System Settings > Privacy & Security > Accessibility    |
 | **Screen Recording** | Screenshots (screencapture)          | System Settings > Privacy & Security > Screen Recording |
 
-The server **automatically prompts** for both permissions on first launch — macOS will open System Settings where you can toggle the switch for the host application. If permissions aren't granted, tool responses will include a warning message identifying which application needs access (e.g. "Accessibility permission is not granted for Terminal").
+The server **automatically prompts** for Accessibility permission on first launch -- macOS will open System Settings where you can toggle the switch for the host application. Screen Recording permission is checked silently. If either permission isn't granted, tool responses will include a warning message identifying which application needs access (e.g. "Accessibility permission is not granted for Terminal").
 
 Run `yarn doctor` to check if permissions are granted.
 
@@ -187,7 +187,7 @@ Raw vision-based coordinate estimation is the Achilles' heel of every multimodal
    row labels (Y axis)
 ```
 
-Every screenshot is wrapped in a black margin with **labeled grid lines** at fixed intervals. The MCP server instructions tell the model the exact pixel value of each label, giving it a spatial coordinate system it can read directly from the image instead of guessing. The model identifies the nearest grid labels and calls `get_coordinates` with a percentage offset to get exact pixel values deterministically.
+Every screenshot is wrapped in a dark margin on all four sides with **labeled grid lines** at fixed intervals. The grid layout (spacing, padding) is computed dynamically based on the image dimensions and the configured number of divisions. The MCP server instructions tell the model the exact pixel value of each label, giving it a spatial coordinate system it can read directly from the image instead of guessing. The model identifies the nearest grid labels and calls `get_coordinates` with a percentage offset to get exact pixel values deterministically.
 
 The result: the AI goes from "somewhere around the middle of the screen" to "between grid lines C and D on the X axis, right on line F on the Y axis" and calls `get_coordinates` to compute the exact pixel coordinates. This practically eliminates mis-taps on small targets like icons, buttons, and text fields.
 
@@ -210,10 +210,10 @@ The result: the AI goes from "somewhere around the middle of the screen" to "bet
 
 Configuration is via environment variables:
 
-| Variable    | Default | Description                                            |
-| ----------- | ------- | ------------------------------------------------------ |
-| `APP_ENV`   | `local` | Environment (`test`, `local`, `dev`, `prod`)           |
-| `LOG_LEVEL` | `info`  | Log level (`debug`, `info`, `warn`, `error`, `silent`) |
+| Variable    | Default | Description                                                            |
+| ----------- | ------- | ---------------------------------------------------------------------- |
+| `APP_ENV`   | `local` | Environment (`test`, `local`, `dev`, `prod`). Falls back to `NODE_ENV` |
+| `LOG_LEVEL` | `info`  | Log level (`debug`, `info`, `warn`, `error`, `silent`)                 |
 
 ## Troubleshooting
 
@@ -235,8 +235,8 @@ Configuration is via environment variables:
 
 **Screenshots are blank or wrong**
 
-- The server prompts for Screen Recording permission on startup. If you dismissed it, grant it manually:
-- System Settings > Privacy & Security > Screen Recording — enable the application hosting the MCP server (e.g. Terminal, VS Code, Claude Desktop)
+- The server checks for Screen Recording permission on startup. Grant it manually if missing:
+- System Settings > Privacy & Security > Screen Recording -- enable the application hosting the MCP server (e.g. Terminal, VS Code, Claude Desktop)
 - You may need to restart the server after granting Screen Recording
 
 **Taps/swipes don't work**

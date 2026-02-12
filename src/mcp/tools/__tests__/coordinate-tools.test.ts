@@ -1,10 +1,19 @@
 import { type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { describe, expect, it } from 'vitest';
 
+import { type GridLayout } from '@lib/mirroring';
+
 import { registerCoordinateTools } from '../coordinate-tools';
 
-// Default config: overlayGridSpacing=50, overlayGridPadding=50
-// labelPixel(i) = 50 + i * 50  →  A=100, B=150, C=200, ...
+// Mock layout: spacing=170, padding=120
+// labelPixel(i) = 120 + i * 170  →  A=120, B=290, C=460, ...
+const MOCK_LAYOUT: GridLayout = {
+  spacing: 170,
+  padding: 120,
+  fontSize: 64,
+  strokeWidth: 4,
+  tick: 42,
+};
 
 type ToolHandler = (params: Record<string, unknown>) => {
   content: { type: string; text: string }[];
@@ -19,7 +28,7 @@ function setup(): ToolHandler {
     },
   } as unknown as McpServer;
 
-  registerCoordinateTools(fakeServer);
+  registerCoordinateTools({ server: fakeServer, getGridLayout: () => MOCK_LAYOUT });
 
   if (!handler) {
     throw new Error('registerCoordinateTools did not register a tool');
@@ -47,30 +56,32 @@ describe('get_coordinates', () => {
 
   it('converts A/A at 0% to the first grid intersection', () => {
     const result = call(handler, 'A', 'A', 0, 0);
-    expect(result).toEqual({ x: 100, y: 100 });
+    // A=0: 120 + 0*170 = 120
+    expect(result).toEqual({ x: 120, y: 120 });
   });
 
   it('interpolates between grid marks at 50%', () => {
-    // B=150, C=200 → 150 + 0.5*50 = 175, 200 + 0.5*50 = 225
+    // B=1: 120+1*170=290, C=2: 120+2*170=460
+    // 290 + 0.5*170 = 375, 460 + 0.5*170 = 545
     const result = call(handler, 'B', 'C', 50, 50);
-    expect(result).toEqual({ x: 175, y: 225 });
+    expect(result).toEqual({ x: 375, y: 545 });
   });
 
   it('at 100% offset equals the next grid mark', () => {
-    // A=100, 100% → 100 + 1.0*50 = 150 (same as B at 0%)
+    // A=120, 100% → 120 + 1.0*170 = 290 (same as B at 0%)
     const result = call(handler, 'A', 'A', 100, 100);
-    expect(result).toEqual({ x: 150, y: 150 });
+    expect(result).toEqual({ x: 290, y: 290 });
   });
 
   it('handles string with "%" sign', () => {
+    // A=120: 120 + 0.4*170 = 188, 120 + 0.6*170 = 222
     const result = call(handler, 'A', 'A', '40%', '60%');
-    // 100 + 0.4*50 = 120, 100 + 0.6*50 = 130
-    expect(result).toEqual({ x: 120, y: 130 });
+    expect(result).toEqual({ x: 188, y: 222 });
   });
 
   it('handles string numeric without "%" sign', () => {
     const result = call(handler, 'A', 'A', '40', '60');
-    expect(result).toEqual({ x: 120, y: 130 });
+    expect(result).toEqual({ x: 188, y: 222 });
   });
 
   it('is case-insensitive for grid labels', () => {
