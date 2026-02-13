@@ -1,18 +1,9 @@
 import pkg from '../package.json';
 
-type AppEnv = 'test' | 'local' | 'dev' | 'prod';
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'silent';
 
-const getEnv = (): AppEnv => {
-  const env = process.env.APP_ENV ?? process.env.NODE_ENV;
-  if (env === 'test' || env === 'local' || env === 'dev' || env === 'prod') {
-    return env;
-  }
-  return 'local';
-};
-
 const getLogLevel = (): LogLevel => {
-  const level = process.env.LOG_LEVEL;
+  const level = process.env.IPHONE_MCP_LOG_LEVEL;
   if (
     level === 'debug' ||
     level === 'info' ||
@@ -25,25 +16,29 @@ const getLogLevel = (): LogLevel => {
   return 'info';
 };
 
-const env = getEnv();
+const parseIntFromEnvVar = (envVar: string, fallback: number): number => {
+  const raw = process.env[envVar];
+  if (raw === undefined) return fallback;
+  const parsed = Number(raw);
+  if (Number.isNaN(parsed) || parsed < 1 || !Number.isInteger(parsed)) {
+    // stderr directly — createLogger depends on config, so we can't use it here
+    console.error(`[config] Invalid value for ${envVar}="${raw}", using default ${fallback}`);
+    return fallback;
+  }
+  return parsed;
+};
 
 const config = {
   name: pkg.name,
   version: pkg.version,
-  app: {
-    env,
-    isTest: env === 'test',
-    isLocal: env === 'local',
-    isProd: env === 'prod',
-  },
   logging: {
     level: getLogLevel(),
   },
   mirroring: {
     appName: pkg.name,
-    launchTimeoutMs: 10_000,
-    screenshotScale: 2,
-    overlayGridDivisions: 9,
+    launchTimeoutMs: parseIntFromEnvVar('IPHONE_MCP_LAUNCH_TIMEOUT_MS', 10_000),
+    screenshotScale: parseIntFromEnvVar('IPHONE_MCP_SCREENSHOT_SCALE', 2),
+    overlayGridDivisions: parseIntFromEnvVar('IPHONE_MCP_GRID_DIVISIONS', 9),
     scrollSpeed: 1,
     swipeSpeed: 2,
   },

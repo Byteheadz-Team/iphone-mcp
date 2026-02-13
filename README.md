@@ -212,12 +212,14 @@ This turns out to be one of the most impactful parts of the whole system. Withou
 
 ## Configuration
 
-Configuration is via environment variables:
+Configuration is via environment variables (all prefixed with `IPHONE_MCP_`):
 
-| Variable    | Default | Description                                                            |
-| ----------- | ------- | ---------------------------------------------------------------------- |
-| `APP_ENV`   | `local` | Environment (`test`, `local`, `dev`, `prod`). Falls back to `NODE_ENV` |
-| `LOG_LEVEL` | `info`  | Log level (`debug`, `info`, `warn`, `error`, `silent`)                 |
+| Variable                       | Default | Description                                                                          |
+| ------------------------------ | ------- | ------------------------------------------------------------------------------------ |
+| `IPHONE_MCP_LOG_LEVEL`        | `info`  | Log level (`debug`, `info`, `warn`, `error`, `silent`)                               |
+| `IPHONE_MCP_SCREENSHOT_SCALE` | `2`     | Screenshot resolution multiplier. Lower values reduce image size and token usage      |
+| `IPHONE_MCP_GRID_DIVISIONS`   | `9`     | Number of grid divisions on the coordinate overlay. More divisions = finer precision |
+| `IPHONE_MCP_LAUNCH_TIMEOUT_MS`| `10000` | How long to wait for iPhone Mirroring to launch (milliseconds)                       |
 
 ## Troubleshooting
 
