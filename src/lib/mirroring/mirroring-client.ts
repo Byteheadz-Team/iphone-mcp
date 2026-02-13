@@ -338,25 +338,25 @@ $.CGEventPost($.kCGHIDEventTap, mouseUp);
     y,
     deltaX,
     deltaY,
-    speed = 1,
+    durationMs = 1000,
   }: {
     x: number;
     y: number;
     deltaX: number;
     deltaY: number;
-    speed?: number;
+    durationMs?: number;
   }): Promise<void> {
     await this.activate();
 
-    // Target ~300ms gesture duration regardless of delta size by scaling step size.
+    // Spread scroll events over the requested duration.
     const stepInterval = 0.008; // 8ms between events
-    const targetSteps = 37; // ~300ms / 8ms
+    const targetSteps = Math.max(Math.round(durationMs / 8), 1);
     const maxDelta = Math.max(Math.abs(deltaY), Math.abs(deltaX), 1);
     const stepSize = Math.max(2, Math.round(maxDelta / targetSteps));
     const totalSteps = Math.max(Math.round(maxDelta / stepSize), 1);
     const dyPerStep = deltaY !== 0 ? Math.round(deltaY / totalSteps) : 0;
     const dxPerStep = deltaX !== 0 ? Math.round(deltaX / totalSteps) : 0;
-    const stepDelay = stepInterval / speed;
+    const stepDelay = stepInterval;
 
     // Use pixel-based scrolling (unit=1) for accurate distance control.
     // Avoid continuous/phase flags — iPhone Mirroring misinterprets trackpad

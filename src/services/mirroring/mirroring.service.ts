@@ -184,11 +184,13 @@ export class MirroringService extends Module {
     y,
     direction = 'down',
     distance = 150,
+    duration,
   }: {
     x: number;
     y: number;
     direction?: ScrollDirection;
     distance?: number;
+    duration?: number;
   }): Promise<void> {
     const info = await this.refreshWindowInfo();
     const screen = this.toScreenCoords({ info, pixelX: x, pixelY: y });
@@ -202,6 +204,7 @@ export class MirroringService extends Module {
       ...screen,
       deltaX: horizontal ? directed : 0,
       deltaY: horizontal ? 0 : directed,
+      durationMs: duration !== undefined ? Math.round(duration * 1000) : undefined,
     });
   }
 

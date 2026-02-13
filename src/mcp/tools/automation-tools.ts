@@ -200,13 +200,21 @@ export const registerAutomationTools = (
             'How far to scroll in scroll-wheel pixels (default: 150, which is ~0.9 pages on most screens). ' +
               'Adjust based on visual feedback: increase if scrolling moves too little, decrease if too much.',
           ),
+        duration: z
+          .number()
+          .positive()
+          .optional()
+          .describe(
+            'Scroll animation duration in seconds (default: 1). ' +
+              'Lower values scroll faster, higher values scroll slower and more smoothly.',
+          ),
         screenshotDelay: screenshotDelaySchema,
       },
       annotations: { destructiveHint: false, openWorldHint: false },
     },
-    async ({ x, y, direction, distance, screenshotDelay }) => {
+    async ({ x, y, direction, distance, duration, screenshotDelay }) => {
       try {
-        await mirroringService.scroll({ x, y, direction, distance });
+        await mirroringService.scroll({ x, y, direction, distance, duration });
         return withScreenshotAfter(
           mirroringService,
           screenshotDelay,
