@@ -12,6 +12,9 @@ MCP server that controls a physical iPhone via macOS iPhone Mirroring. See @READ
 - `yarn check` — format + lint fix + typecheck (run before committing)
 - `yarn doctor` — preflight check (macOS version, permissions, device detection)
 - `yarn screenshot` — capture iPhone screen with grid overlay, save to current directory
+- `yarn tap <x> <y>` — tap at screenshot coordinates
+- `yarn scroll <x> <y> <deltaY>` — scroll at a point (positive deltaY = scroll down)
+- `yarn swipe <startX> <startY> <endX> <endY>` — swipe between two points
 
 Run a single test file: `yarn vitest run src/path/to/file.test.ts`
 

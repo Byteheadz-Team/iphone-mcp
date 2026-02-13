@@ -49,6 +49,9 @@
     "check": "prettier --write . && eslint --cache --fix . && tsc --noEmit",
     "doctor": "tsx src/scripts/doctor.ts",
     "screenshot": "tsx src/scripts/screenshot.ts",
+    "tap": "tsx src/scripts/tap.ts",
+    "scroll": "tsx src/scripts/scroll.ts",
+    "swipe": "tsx src/scripts/swipe.ts",
     "prepare": "husky",
     "prepublishOnly": "yarn build"
   },
