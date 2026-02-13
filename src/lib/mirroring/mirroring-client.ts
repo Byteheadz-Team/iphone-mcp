@@ -21,46 +21,68 @@ const APP_NAME = 'iPhone Mirroring';
 const LAUNCH_TIMEOUT_MS = 10_000;
 const LAUNCH_POLL_INTERVAL_MS = 500;
 
-const escapeAppleScriptString = (str: string): string =>
+// Escape a string for embedding in a single-quoted JXA (JavaScript) string literal.
+const escapeJXAString = (str: string): string =>
   str
     .replace(/\\/g, '\\\\')
-    .replace(/"/g, '\\"')
+    .replace(/'/g, "\\'")
     .replace(/\n/g, '\\n')
     .replace(/\r/g, '\\r');
 
-// Characters that require AppleScript `key code` instead of `keystroke`.
+// Characters sent via CGEvent key code instead of `keystroke`.
 const SPECIAL_KEY_CODES = new Map<string, number>([
   ['\b', 51], // backspace
   ['\x7f', 117], // forward delete (DEL)
   ['\t', 48], // tab
   ['\x1b', 53], // escape
+  ['\n', 36], // return / newline
+  ['\r', 36], // carriage return → return
 ]);
+
+const isAsciiPrintable = (codePoint: number): boolean =>
+  codePoint >= 0x20 && codePoint <= 0x7e;
 
 type TextSegment =
   | { type: 'text'; value: string }
-  | { type: 'keyCode'; code: number };
+  | { type: 'keyCode'; code: number }
+  | { type: 'paste'; value: string };
 
 const parseTextSegments = (text: string): TextSegment[] => {
   const segments: TextSegment[] = [];
   let current = '';
+  let currentType: 'text' | 'paste' | null = null;
+
+  const flushCurrent = () => {
+    if (current && currentType) {
+      segments.push(
+        currentType === 'text'
+          ? { type: 'text', value: current }
+          : { type: 'paste', value: current },
+      );
+      current = '';
+      currentType = null;
+    }
+  };
 
   for (const char of text) {
     const keyCode = SPECIAL_KEY_CODES.get(char);
     if (keyCode !== undefined) {
-      if (current) {
-        segments.push({ type: 'text', value: current });
-        current = '';
-      }
+      flushCurrent();
       segments.push({ type: 'keyCode', code: keyCode });
     } else {
+      const codePoint = char.codePointAt(0) ?? 0;
+      const charType: 'text' | 'paste' = isAsciiPrintable(codePoint)
+        ? 'text'
+        : 'paste';
+      if (currentType !== null && charType !== currentType) {
+        flushCurrent();
+      }
+      currentType = charType;
       current += char;
     }
   }
 
-  if (current) {
-    segments.push({ type: 'text', value: current });
-  }
-
+  flushCurrent();
   return segments;
 };
 
@@ -192,17 +214,29 @@ JSON.stringify({ x, y, width, height, windowId });
     }
   }
 
-  async postClick({ x, y }: { x: number; y: number }): Promise<void> {
+  async postClick({
+    x,
+    y,
+    numTaps = 1,
+  }: {
+    x: number;
+    y: number;
+    numTaps?: number;
+  }): Promise<void> {
     await this.activate();
 
     const script = `
 ObjC.import('CoreGraphics');
 const point = $.CGPointMake(${x}, ${y});
-const mouseDown = $.CGEventCreateMouseEvent(null, $.kCGEventLeftMouseDown, point, $.kCGMouseButtonLeft);
-const mouseUp = $.CGEventCreateMouseEvent(null, $.kCGEventLeftMouseUp, point, $.kCGMouseButtonLeft);
-$.CGEventPost($.kCGHIDEventTap, mouseDown);
-delay(0.05);
-$.CGEventPost($.kCGHIDEventTap, mouseUp);
+const taps = ${numTaps};
+for (let i = 0; i < taps; i++) {
+  if (i > 0) delay(0.1);
+  const mouseDown = $.CGEventCreateMouseEvent(null, $.kCGEventLeftMouseDown, point, $.kCGMouseButtonLeft);
+  const mouseUp = $.CGEventCreateMouseEvent(null, $.kCGEventLeftMouseUp, point, $.kCGMouseButtonLeft);
+  $.CGEventPost($.kCGHIDEventTap, mouseDown);
+  delay(0.05);
+  $.CGEventPost($.kCGHIDEventTap, mouseUp);
+}
 `;
 
     await execFile('osascript', ['-l', 'JavaScript', '-e', script]);
@@ -370,22 +404,53 @@ end tell
   }
 
   async typeText(text: string): Promise<void> {
+    if (!text) return;
     await this.activate();
 
     const segments = parseTextSegments(text);
-    const lines = segments.map((segment) =>
-      segment.type === 'text'
-        ? `  keystroke "${escapeAppleScriptString(segment.value)}"`
-        : `  key code ${String(segment.code)}`,
-    );
+    const hasKeyCode = segments.some((s) => s.type === 'keyCode');
+    const hasPaste = segments.some((s) => s.type === 'paste');
 
-    const script = `
-tell application "System Events"
-${lines.join('\n')}
-end tell
-`;
+    const preamble: string[] = [];
+    if (hasKeyCode) preamble.push("ObjC.import('CoreGraphics');");
+    preamble.push("const se = Application('System Events');");
+    if (hasPaste) {
+      preamble.push('const app = Application.currentApplication();');
+      preamble.push('app.includeStandardAdditions = true;');
+    }
 
-    await execFile('osascript', ['-e', script]);
+    const body: string[] = [];
+    for (const segment of segments) {
+      switch (segment.type) {
+        case 'text':
+          body.push(`se.keystroke('${escapeJXAString(segment.value)}');`);
+          break;
+        case 'keyCode':
+          body.push(
+            `(() => {`,
+            `  const kd = $.CGEventCreateKeyboardEvent(null, ${String(segment.code)}, true);`,
+            `  $.CGEventPost($.kCGHIDEventTap, kd);`,
+            `  delay(0.05);`,
+            `  const ku = $.CGEventCreateKeyboardEvent(null, ${String(segment.code)}, false);`,
+            `  $.CGEventPost($.kCGHIDEventTap, ku);`,
+            `})();`,
+          );
+          break;
+        case 'paste':
+          body.push(
+            `(() => {`,
+            `  app.setTheClipboardTo('${escapeJXAString(segment.value)}');`,
+            `  delay(0.1);`,
+            `  se.keystroke('v', { using: 'command down' });`,
+            `  delay(0.1);`,
+            `})();`,
+          );
+          break;
+      }
+    }
+
+    const script = [...preamble, ...body].join('\n');
+    await execFile('osascript', ['-l', 'JavaScript', '-e', script]);
   }
 
   async checkAccessibilityPermission(): Promise<boolean> {

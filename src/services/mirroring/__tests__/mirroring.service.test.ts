@@ -152,6 +152,25 @@ describe('MirroringService', () => {
       expect(mock.postClick).toHaveBeenCalledWith({
         x: 100 + (200 - p) / SCALE,
         y: 200 + (400 - p) / SCALE,
+        numTaps: undefined,
+      });
+    });
+
+    it('passes numTaps to client', async () => {
+      const mock = createMockClient();
+      const service = new MirroringService(mock as unknown as MirroringClient);
+      await service.start();
+
+      const p = computeGridLayout({
+        shortSide: 400 * SCALE,
+        targetDivisions: config.mirroring.overlayGridDivisions,
+      }).padding;
+      await service.tap({ x: 200, y: 400, numTaps: 2 });
+
+      expect(mock.postClick).toHaveBeenCalledWith({
+        x: 100 + (200 - p) / SCALE,
+        y: 200 + (400 - p) / SCALE,
+        numTaps: 2,
       });
     });
   });

@@ -123,10 +123,18 @@ export class MirroringService extends Module {
     });
   }
 
-  async tap({ x, y }: { x: number; y: number }): Promise<void> {
+  async tap({
+    x,
+    y,
+    numTaps,
+  }: {
+    x: number;
+    y: number;
+    numTaps?: number;
+  }): Promise<void> {
     const info = await this.refreshWindowInfo();
     const screen = this.toScreenCoords({ info, pixelX: x, pixelY: y });
-    await this.client.postClick(screen);
+    await this.client.postClick({ ...screen, numTaps });
   }
 
   async longPress({

@@ -41,17 +41,30 @@ export const registerAutomationTools = (
       inputSchema: {
         x: z.number().describe('X coordinate to tap (in screenshot pixels)'),
         y: z.number().describe('Y coordinate to tap (in screenshot pixels)'),
+        numTaps: z
+          .number()
+          .int()
+          .min(1)
+          .max(10)
+          .optional()
+          .describe(
+            'Number of times to tap (e.g. 2 for double-tap, 3 for triple-tap). Default 1.',
+          ),
         screenshotDelay: screenshotDelaySchema,
       },
       annotations: { destructiveHint: false, openWorldHint: false },
     },
-    async ({ x, y, screenshotDelay }) => {
+    async ({ x, y, numTaps, screenshotDelay }) => {
       try {
-        await mirroringService.tap({ x, y });
+        await mirroringService.tap({ x, y, numTaps });
+        const label =
+          numTaps && numTaps > 1
+            ? `Tapped ${String(numTaps)}x at (${x}, ${y})`
+            : `Tapped at (${x}, ${y})`;
         return withScreenshotAfter(
           mirroringService,
           screenshotDelay,
-          actionContent(`Tapped at (${x}, ${y})`),
+          actionContent(label),
         );
       } catch (error: unknown) {
         return toolError(error);
@@ -211,12 +224,12 @@ export const registerAutomationTools = (
     'type_text',
     {
       description:
-        'Type text into the currently focused input field. Always use this tool for text input — do not wait for the on-screen keyboard to appear, it will not be visible in screenshots but this tool will still work. Take a screenshot first to confirm the current screen state. Supports special characters: use \\b for backspace, \\t for tab, \\x7f for forward delete, and \\x1b for escape (send these as their actual character codes in the JSON string, e.g. "\\b" for backspace).',
+        'Type text into the currently focused input field. Always use this tool for text input — do not wait for the on-screen keyboard to appear, it will not be visible in screenshots but this tool will still work. Take a screenshot first to confirm the current screen state. Supports emoji and non-ASCII characters (typed via clipboard paste). Supports special characters: use \\b for backspace, \\t for tab, \\x7f for forward delete, and \\x1b for escape (send these as their actual character codes in the JSON string, e.g. "\\b" for backspace).',
       inputSchema: {
         text: z
           .string()
           .describe(
-            'Text to type. Supports special characters: \\b (backspace), \\t (tab), \\x7f (forward delete), \\x1b (escape)',
+            'Text to type. Supports emoji and non-ASCII characters. Special characters: \\b (backspace), \\t (tab), \\x7f (forward delete), \\x1b (escape)',
           ),
         screenshotDelay: screenshotDelaySchema,
       },

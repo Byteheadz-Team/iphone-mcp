@@ -144,7 +144,7 @@ Runs the server with `tsx watch` for automatic restarts on file changes.
 
 | Tool           | Description                                                                                                                   | Parameters                                                                     |
 | -------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `tap`          | Tap at coordinates (in screenshot pixels)                                                                                     | `x`, `y`, `screenshotDelay?`                                                   |
+| `tap`          | Tap at coordinates (in screenshot pixels). Supports multi-tap (double-tap, triple-tap, etc.)                                  | `x`, `y`, `numTaps?`, `screenshotDelay?`                                  |
 | `long_press`   | Press and hold at coordinates for a duration                                                                                  | `x`, `y`, `duration` (seconds), `screenshotDelay?`                             |
 | `swipe`        | Swipe between two points -- best for directional gestures (dismissing, pull-to-refresh, drag-and-drop)                        | `startX`, `startY`, `endX`, `endY`, `duration?`, `easing?`, `screenshotDelay?` |
 | `scroll`       | Scroll content at a point -- best for scrolling lists, web pages, feeds, and home screen pages (trackpad-style scroll events) | `x`, `y`, `direction?`, `distance?`, `screenshotDelay?`                         |

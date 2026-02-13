@@ -157,6 +157,21 @@ describe('MirroringClient', () => {
       expect(clickScript).toContain('CGPointMake(150, 300)');
       expect(clickScript).toContain('kCGEventLeftMouseDown');
       expect(clickScript).toContain('kCGEventLeftMouseUp');
+      expect(clickScript).toContain('const taps = 1');
+    });
+
+    it('generates multi-tap loop for numTaps > 1', async () => {
+      const mock = mockExecFileSequence(['', '']);
+
+      const client = new MirroringClient();
+      await client.postClick({ x: 150, y: 300, numTaps: 3 });
+
+      expect(mock).toHaveBeenCalledTimes(2);
+
+      const clickScript = getCallScript(mock, 1);
+      expect(clickScript).toContain('const taps = 3');
+      expect(clickScript).toContain('for (let i = 0; i < taps; i++)');
+      expect(clickScript).toContain('if (i > 0) delay(0.1)');
     });
   });
 
@@ -236,7 +251,7 @@ describe('MirroringClient', () => {
   });
 
   describe('typeText', () => {
-    it('activates the app then types via keystroke', async () => {
+    it('activates the app then types via JXA keystroke', async () => {
       const mock = mockExecFileSequence(['', '']);
 
       const client = new MirroringClient();
@@ -247,73 +262,89 @@ describe('MirroringClient', () => {
       const activateScript = getCallScript(mock, 0);
       expect(activateScript).toContain('iPhone Mirroring');
 
-      const keystrokeScript = getCallScript(mock, 1);
-      expect(keystrokeScript).toContain('keystroke "hello"');
+      const typeCall = mock.mock.calls[1] as string[][];
+      expect(typeCall[1]).toContain('-l');
+      expect(typeCall[1]).toContain('JavaScript');
+
+      const script = getCallScript(mock, 1);
+      expect(script).toContain("se.keystroke('hello')");
     });
 
-    it('escapes special characters in text', async () => {
+    it('escapes backslashes and single quotes in JXA strings', async () => {
       const mock = mockExecFileSequence(['', '']);
 
       const client = new MirroringClient();
-      await client.typeText('say "hi" \\ there');
+      await client.typeText("say 'hi' \\ there");
 
-      const keystrokeScript = getCallScript(mock, 1);
-      expect(keystrokeScript).toContain('say \\"hi\\" \\\\ there');
+      const script = getCallScript(mock, 1);
+      expect(script).toContain("se.keystroke('say \\'hi\\' \\\\ there')");
     });
 
-    it('does not escape single quotes (valid inside AppleScript double-quoted strings)', async () => {
-      const mock = mockExecFileSequence(['', '']);
-
-      const client = new MirroringClient();
-      await client.typeText("that's great");
-
-      const keystrokeScript = getCallScript(mock, 1);
-      expect(keystrokeScript).toContain('keystroke "that\'s great"');
-    });
-
-    it('sends backspace as key code 51', async () => {
+    it('sends backspace via CGEvent key code 51', async () => {
       const mock = mockExecFileSequence(['', '']);
 
       const client = new MirroringClient();
       await client.typeText('ab\bc');
 
       const script = getCallScript(mock, 1);
-      expect(script).toContain('keystroke "ab"');
-      expect(script).toContain('key code 51');
-      expect(script).toContain('keystroke "c"');
+      expect(script).toContain("se.keystroke('ab')");
+      expect(script).toContain(
+        'CGEventCreateKeyboardEvent(null, 51, true)',
+      );
+      expect(script).toContain("se.keystroke('c')");
     });
 
-    it('sends forward delete as key code 117', async () => {
+    it('sends forward delete via CGEvent key code 117', async () => {
       const mock = mockExecFileSequence(['', '']);
 
       const client = new MirroringClient();
       await client.typeText('\x7f');
 
       const script = getCallScript(mock, 1);
-      expect(script).toContain('key code 117');
-      expect(script).not.toContain('keystroke');
+      expect(script).toContain(
+        'CGEventCreateKeyboardEvent(null, 117, true)',
+      );
+      expect(script).not.toContain('se.keystroke');
     });
 
-    it('sends tab as key code 48', async () => {
+    it('sends tab via CGEvent key code 48', async () => {
       const mock = mockExecFileSequence(['', '']);
 
       const client = new MirroringClient();
       await client.typeText('a\tb');
 
       const script = getCallScript(mock, 1);
-      expect(script).toContain('keystroke "a"');
-      expect(script).toContain('key code 48');
-      expect(script).toContain('keystroke "b"');
+      expect(script).toContain("se.keystroke('a')");
+      expect(script).toContain(
+        'CGEventCreateKeyboardEvent(null, 48, true)',
+      );
+      expect(script).toContain("se.keystroke('b')");
     });
 
-    it('sends escape as key code 53', async () => {
+    it('sends escape via CGEvent key code 53', async () => {
       const mock = mockExecFileSequence(['', '']);
 
       const client = new MirroringClient();
       await client.typeText('\x1b');
 
       const script = getCallScript(mock, 1);
-      expect(script).toContain('key code 53');
+      expect(script).toContain(
+        'CGEventCreateKeyboardEvent(null, 53, true)',
+      );
+    });
+
+    it('sends return via CGEvent key code 36', async () => {
+      const mock = mockExecFileSequence(['', '']);
+
+      const client = new MirroringClient();
+      await client.typeText('a\nb');
+
+      const script = getCallScript(mock, 1);
+      expect(script).toContain("se.keystroke('a')");
+      expect(script).toContain(
+        'CGEventCreateKeyboardEvent(null, 36, true)',
+      );
+      expect(script).toContain("se.keystroke('b')");
     });
 
     it('handles multiple consecutive special keys', async () => {
@@ -323,8 +354,54 @@ describe('MirroringClient', () => {
       await client.typeText('\b\b\b');
 
       const script = getCallScript(mock, 1);
-      const matches = script.match(/key code 51/g);
+      const matches = script.match(/CGEventCreateKeyboardEvent\(null, 51, true\)/g);
       expect(matches).toHaveLength(3);
+    });
+
+    it('pastes emoji via clipboard and Cmd+V', async () => {
+      const mock = mockExecFileSequence(['', '']);
+
+      const client = new MirroringClient();
+      await client.typeText('hello 😀');
+
+      const script = getCallScript(mock, 1);
+      expect(script).toContain("se.keystroke('hello ')");
+      expect(script).toContain('app.setTheClipboardTo');
+      expect(script).toContain("se.keystroke('v', { using: 'command down' })");
+    });
+
+    it('handles mixed ASCII, emoji, and special keys', async () => {
+      const mock = mockExecFileSequence(['', '']);
+
+      const client = new MirroringClient();
+      await client.typeText('hi 🎉\b');
+
+      const script = getCallScript(mock, 1);
+      expect(script).toContain("se.keystroke('hi ')");
+      expect(script).toContain('app.setTheClipboardTo');
+      expect(script).toContain(
+        'CGEventCreateKeyboardEvent(null, 51, true)',
+      );
+    });
+
+    it('only imports CoreGraphics when key codes are needed', async () => {
+      const mock = mockExecFileSequence(['', '']);
+
+      const client = new MirroringClient();
+      await client.typeText('hello');
+
+      const script = getCallScript(mock, 1);
+      expect(script).not.toContain('CoreGraphics');
+      expect(script).not.toContain('includeStandardAdditions');
+    });
+
+    it('skips osascript for empty text', async () => {
+      const mock = mockExecFileSequence([]);
+
+      const client = new MirroringClient();
+      await client.typeText('');
+
+      expect(mock).not.toHaveBeenCalled();
     });
   });
 
