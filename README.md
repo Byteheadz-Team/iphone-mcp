@@ -148,7 +148,7 @@ Runs the server with `tsx watch` for automatic restarts on file changes.
 | `long_press`   | Press and hold at coordinates for a duration                                                                                  | `x`, `y`, `duration` (seconds), `screenshotDelay?`                             |
 | `swipe`        | Swipe between two points -- best for directional gestures (dismissing, pull-to-refresh, drag-and-drop)                        | `startX`, `startY`, `endX`, `endY`, `duration?`, `easing?`, `screenshotDelay?` |
 | `scroll`       | Scroll content at a point -- best for scrolling lists, web pages, feeds, and home screen pages (trackpad-style scroll events) | `x`, `y`, `deltaX?`, `deltaY?`, `speed?`, `screenshotDelay?`                   |
-| `type_text`    | Type text into the focused input field                                                                                        | `text`, `screenshotDelay?`                                                     |
+| `type_text`    | Type text into the focused input field. Supports special keys: `\b` backspace, `\t` tab, `\x7f` forward delete, `\x1b` escape | `text`, `screenshotDelay?`                                                     |
 | `press_button` | Press a device button (home, app_switcher, spotlight)                                                                         | `button`, `screenshotDelay?`                                                   |
 
 ### Clipboard

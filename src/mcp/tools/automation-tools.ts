@@ -204,9 +204,13 @@ export const registerAutomationTools = (
     'type_text',
     {
       description:
-        'Type text into the currently focused input field. Always use this tool for text input — do not wait for the on-screen keyboard to appear, it will not be visible in screenshots but this tool will still work. Take a screenshot first to confirm the current screen state.',
+        'Type text into the currently focused input field. Always use this tool for text input — do not wait for the on-screen keyboard to appear, it will not be visible in screenshots but this tool will still work. Take a screenshot first to confirm the current screen state. Supports special characters: use \\b for backspace, \\t for tab, \\x7f for forward delete, and \\x1b for escape (send these as their actual character codes in the JSON string, e.g. "\\b" for backspace).',
       inputSchema: {
-        text: z.string().describe('Text to type'),
+        text: z
+          .string()
+          .describe(
+            'Text to type. Supports special characters: \\b (backspace), \\t (tab), \\x7f (forward delete), \\x1b (escape)',
+          ),
         screenshotDelay: screenshotDelaySchema,
       },
       annotations: { destructiveHint: false, openWorldHint: false },

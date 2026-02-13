@@ -28,6 +28,42 @@ const escapeAppleScriptString = (str: string): string =>
     .replace(/\n/g, '\\n')
     .replace(/\r/g, '\\r');
 
+// Characters that require AppleScript `key code` instead of `keystroke`.
+const SPECIAL_KEY_CODES = new Map<string, number>([
+  ['\b', 51], // backspace
+  ['\x7f', 117], // forward delete (DEL)
+  ['\t', 48], // tab
+  ['\x1b', 53], // escape
+]);
+
+type TextSegment =
+  | { type: 'text'; value: string }
+  | { type: 'keyCode'; code: number };
+
+const parseTextSegments = (text: string): TextSegment[] => {
+  const segments: TextSegment[] = [];
+  let current = '';
+
+  for (const char of text) {
+    const keyCode = SPECIAL_KEY_CODES.get(char);
+    if (keyCode !== undefined) {
+      if (current) {
+        segments.push({ type: 'text', value: current });
+        current = '';
+      }
+      segments.push({ type: 'keyCode', code: keyCode });
+    } else {
+      current += char;
+    }
+  }
+
+  if (current) {
+    segments.push({ type: 'text', value: current });
+  }
+
+  return segments;
+};
+
 export class MirroringClient {
   async ensureRunning(): Promise<void> {
     await execFile('open', ['-a', APP_NAME]);
@@ -336,15 +372,20 @@ end tell
   async typeText(text: string): Promise<void> {
     await this.activate();
 
-    // Handle special characters and regular text
-    const escaped = escapeAppleScriptString(text);
-    const keystrokeScript = `
+    const segments = parseTextSegments(text);
+    const lines = segments.map((segment) =>
+      segment.type === 'text'
+        ? `  keystroke "${escapeAppleScriptString(segment.value)}"`
+        : `  key code ${String(segment.code)}`,
+    );
+
+    const script = `
 tell application "System Events"
-  keystroke "${escaped}"
+${lines.join('\n')}
 end tell
 `;
 
-    await execFile('osascript', ['-e', keystrokeScript]);
+    await execFile('osascript', ['-e', script]);
   }
 
   async checkAccessibilityPermission(): Promise<boolean> {

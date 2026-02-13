@@ -270,6 +270,62 @@ describe('MirroringClient', () => {
       const keystrokeScript = getCallScript(mock, 1);
       expect(keystrokeScript).toContain('keystroke "that\'s great"');
     });
+
+    it('sends backspace as key code 51', async () => {
+      const mock = mockExecFileSequence(['', '']);
+
+      const client = new MirroringClient();
+      await client.typeText('ab\bc');
+
+      const script = getCallScript(mock, 1);
+      expect(script).toContain('keystroke "ab"');
+      expect(script).toContain('key code 51');
+      expect(script).toContain('keystroke "c"');
+    });
+
+    it('sends forward delete as key code 117', async () => {
+      const mock = mockExecFileSequence(['', '']);
+
+      const client = new MirroringClient();
+      await client.typeText('\x7f');
+
+      const script = getCallScript(mock, 1);
+      expect(script).toContain('key code 117');
+      expect(script).not.toContain('keystroke');
+    });
+
+    it('sends tab as key code 48', async () => {
+      const mock = mockExecFileSequence(['', '']);
+
+      const client = new MirroringClient();
+      await client.typeText('a\tb');
+
+      const script = getCallScript(mock, 1);
+      expect(script).toContain('keystroke "a"');
+      expect(script).toContain('key code 48');
+      expect(script).toContain('keystroke "b"');
+    });
+
+    it('sends escape as key code 53', async () => {
+      const mock = mockExecFileSequence(['', '']);
+
+      const client = new MirroringClient();
+      await client.typeText('\x1b');
+
+      const script = getCallScript(mock, 1);
+      expect(script).toContain('key code 53');
+    });
+
+    it('handles multiple consecutive special keys', async () => {
+      const mock = mockExecFileSequence(['', '']);
+
+      const client = new MirroringClient();
+      await client.typeText('\b\b\b');
+
+      const script = getCallScript(mock, 1);
+      const matches = script.match(/key code 51/g);
+      expect(matches).toHaveLength(3);
+    });
   });
 
   describe('postLongPress', () => {
