@@ -15,6 +15,14 @@ vi.mock('node:child_process', () => ({
   execFile: vi.fn(),
 }));
 
+vi.mock('sharp', () => {
+  const mockSharp = () => ({
+    metadata: () => Promise.resolve({ width: 0, height: 0 }),
+  });
+  mockSharp.default = mockSharp;
+  return { default: mockSharp };
+});
+
 const SCALE = config.mirroring.screenshotScale;
 
 const resolved = Promise.resolve();

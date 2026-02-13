@@ -225,6 +225,7 @@ Configuration is via environment variables (all prefixed with `IPHONE_MCP_`):
 | `IPHONE_MCP_GRID_DIVISIONS`        | `9`     | Number of grid divisions on the coordinate overlay. More divisions = finer precision   |
 | `IPHONE_MCP_PNG_PALETTE`           | `true`  | Enable palette-based PNG (256 colors) for smaller screenshots (`true`/`false`/`1`/`0`) |
 | `IPHONE_MCP_PNG_COMPRESSION_LEVEL` | `6`     | PNG zlib compression level, 0-9 (higher = smaller file but slower)                     |
+| `IPHONE_MCP_MAX_PX_SINGLE_DIMENSION` | `1568` | Max pixels for the longest screenshot dimension. Prevents oversized images for LLMs |
 | `IPHONE_MCP_LAUNCH_TIMEOUT_MS`     | `10000` | How long to wait for iPhone Mirroring to launch (milliseconds)                         |
 
 ## Troubleshooting

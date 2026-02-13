@@ -8,7 +8,7 @@ import {
   type WindowInfo,
   computeGridLayout,
 } from '@lib/mirroring';
-import { Module, execFile } from '@lib/utils';
+import { Module, clampImageDimension, execFile } from '@lib/utils';
 import config from '~/config';
 
 import { type ButtonName, SwipeEasing } from './mirroring.types';
@@ -19,6 +19,7 @@ const SCALE = config.mirroring.screenshotScale;
 const TARGET_DIVISIONS = config.mirroring.overlayGridDivisions;
 const SCROLL_SPEED = config.mirroring.scrollSpeed;
 const SWIPE_SPEED = config.mirroring.swipeSpeed;
+const MAX_DIMENSION = config.mirroring.maxPxSingleDimension;
 const COMPRESS_PNG_PALETTE = config.mirroring.compressPngPalette;
 const PNG_COMPRESSION_LEVEL = config.mirroring.pngCompressionLevel;
 
@@ -105,10 +106,17 @@ export class MirroringService extends Module {
 
   async takeScreenshot(): Promise<Buffer> {
     const info = await this.refreshWindowInfo();
-    return this.client.captureWindow({
+    const buffer = await this.client.captureWindow({
       windowId: info.windowId,
       targetWidth: info.width * SCALE,
       gridDivisions: TARGET_DIVISIONS,
+      compressPngPalette: COMPRESS_PNG_PALETTE,
+      pngCompressionLevel: PNG_COMPRESSION_LEVEL,
+    });
+
+    return clampImageDimension({
+      imageBuffer: buffer,
+      maxDimension: MAX_DIMENSION,
       compressPngPalette: COMPRESS_PNG_PALETTE,
       pngCompressionLevel: PNG_COMPRESSION_LEVEL,
     });

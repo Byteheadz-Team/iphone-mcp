@@ -87,6 +87,11 @@ const config = {
       fallback: 9,
       min: 1,
     }),
+    maxPxSingleDimension: parseIntFromEnvVar({
+      envVar: 'IPHONE_MCP_MAX_PX_SINGLE_DIMENSION',
+      fallback: 1568,
+      min: 1,
+    }),
     compressPngPalette: parseBoolFromEnvVar({
       envVar: 'IPHONE_MCP_PNG_PALETTE',
       fallback: true,
