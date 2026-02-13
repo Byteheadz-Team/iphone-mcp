@@ -262,23 +262,29 @@ $.CGEventPost($.kCGHIDEventTap, mouseUp);
     y,
     deltaX,
     deltaY,
+    speed = 1,
   }: {
     x: number;
     y: number;
     deltaX: number;
     deltaY: number;
+    speed?: number;
   }): Promise<void> {
     await this.activate();
 
-    const stepSize = 4;
-    const stepsY =
-      deltaY !== 0 ? Math.max(Math.round(Math.abs(deltaY) / stepSize), 1) : 0;
-    const stepsX =
-      deltaX !== 0 ? Math.max(Math.round(Math.abs(deltaX) / stepSize), 1) : 0;
-    const totalSteps = Math.max(stepsY, stepsX, 1);
+    // Target ~300ms gesture duration regardless of delta size by scaling step size.
+    const stepInterval = 0.008; // 8ms between events
+    const targetSteps = 37; // ~300ms / 8ms
+    const maxDelta = Math.max(Math.abs(deltaY), Math.abs(deltaX), 1);
+    const stepSize = Math.max(2, Math.round(maxDelta / targetSteps));
+    const totalSteps = Math.max(Math.round(maxDelta / stepSize), 1);
     const dyPerStep = deltaY !== 0 ? Math.round(deltaY / totalSteps) : 0;
     const dxPerStep = deltaX !== 0 ? Math.round(deltaX / totalSteps) : 0;
+    const stepDelay = stepInterval / speed;
 
+    // Use pixel-based scrolling (unit=1) for accurate distance control.
+    // Avoid continuous/phase flags — iPhone Mirroring misinterprets trackpad
+    // gesture phases as an active touch, which blocks subsequent taps.
     const script = `
 ObjC.import('CoreGraphics');
 const point = $.CGPointMake(${x}, ${y});
@@ -288,10 +294,15 @@ delay(0.05);
 const steps = ${totalSteps};
 const dyPerStep = ${dyPerStep};
 const dxPerStep = ${dxPerStep};
+const totalDy = ${deltaY};
+const totalDx = ${deltaX};
 for (let i = 0; i < steps; i++) {
-  const e = $.CGEventCreateScrollWheelEvent(null, 0, 2, dyPerStep, dxPerStep);
+  const last = i === steps - 1;
+  const dy = last ? totalDy - dyPerStep * (steps - 1) : dyPerStep;
+  const dx = last ? totalDx - dxPerStep * (steps - 1) : dxPerStep;
+  const e = $.CGEventCreateScrollWheelEvent(null, 1, 2, dy, dx);
   $.CGEventPost($.kCGHIDEventTap, e);
-  delay(0.008);
+  delay(${stepDelay});
 }
 `;
 

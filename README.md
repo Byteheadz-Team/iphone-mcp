@@ -146,8 +146,8 @@ Runs the server with `tsx watch` for automatic restarts on file changes.
 | -------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | `tap`          | Tap at coordinates (in screenshot pixels)                                                                  | `x`, `y`, `screenshotDelay?`                                                   |
 | `long_press`   | Press and hold at coordinates for a duration                                                               | `x`, `y`, `duration` (seconds), `screenshotDelay?`                             |
-| `swipe`        | Swipe between two points -- best for directional gestures (page switching, dismissing, pull-to-refresh)    | `startX`, `startY`, `endX`, `endY`, `duration?`, `easing?`, `screenshotDelay?` |
-| `scroll`       | Scroll content at a point -- best for scrolling lists, web pages, and feeds (trackpad-style scroll events) | `x`, `y`, `deltaX?`, `deltaY?`, `screenshotDelay?`                             |
+| `swipe`        | Swipe between two points -- best for directional gestures (dismissing, pull-to-refresh, drag-and-drop)     | `startX`, `startY`, `endX`, `endY`, `duration?`, `easing?`, `screenshotDelay?` |
+| `scroll`       | Scroll content at a point -- best for scrolling lists, web pages, feeds, and home screen pages (trackpad-style scroll events) | `x`, `y`, `deltaX?`, `deltaY?`, `speed?`, `screenshotDelay?`  |
 | `type_text`    | Type text into the focused input field                                                                     | `text`, `screenshotDelay?`                                                     |
 | `press_button` | Press a device button (home, app_switcher, spotlight)                                                      | `button`, `screenshotDelay?`                                                   |
 
@@ -192,6 +192,8 @@ Raw vision-based coordinate estimation is the Achilles' heel of every multimodal
 Every screenshot is wrapped in a dark margin on all four sides with **labeled grid lines** at fixed intervals. The grid layout (spacing, padding) is computed dynamically based on the image dimensions and the configured number of divisions. The MCP server instructions tell the model the exact pixel value of each label, giving it a spatial coordinate system it can read directly from the image instead of guessing. The model identifies the nearest grid labels and calls `get_coordinates` with a percentage offset to get exact pixel values deterministically.
 
 The result: the AI goes from "somewhere around the middle of the screen" to "between grid lines C and D on the X axis, right on line F on the Y axis" and calls `get_coordinates` to compute the exact pixel coordinates. This practically eliminates mis-taps on small targets like icons, buttons, and text fields.
+
+This turns out to be one of the most impactful parts of the whole system. Without the grid, vision-based agents miss small tap targets constantly -- buttons, icons, text fields all become a guessing game. The grid gives the model a shared spatial language it can reason about precisely, turning a fuzzy "tap roughly here" into a deterministic coordinate lookup. It's a simple idea, but it makes a surprisingly big difference in practice.
 
 ## Scripts
 
@@ -245,6 +247,11 @@ Configuration is via environment variables:
 
 - The server prompts for Accessibility permission on startup. If you dismissed it, grant it manually:
 - System Settings > Privacy & Security > Accessibility — enable the application hosting the MCP server (e.g. Terminal, VS Code, Claude Desktop)
+
+## Notes
+
+- **Tested models**: This MCP server has primarily been tested with **Claude Sonnet 4.5** and **Claude Opus 4.6**. It should work with other multimodal models that support MCP, but your mileage may vary.
+- **Scrolling and swiping**: Gesture-based interactions (scrolling and swiping) can be finicky -- they go through macOS event injection which doesn't always map 1:1 to how a real finger behaves on glass. We're actively working on improving reliability here. If a scroll or swipe doesn't land right, the AI will usually retry or adjust on its own.
 
 ## Disclaimer
 

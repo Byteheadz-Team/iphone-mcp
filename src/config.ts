@@ -40,11 +40,11 @@ const config = {
     level: getLogLevel(),
   },
   mirroring: {
-    appName: 'iPhone Mirroring',
+    appName: pkg.name,
     launchTimeoutMs: 10_000,
     screenshotScale: 2,
     overlayGridDivisions: 9,
-    scrollSpeed: 2,
+    scrollSpeed: 1,
     swipeSpeed: 2,
   },
 } as const;

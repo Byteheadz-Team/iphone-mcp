@@ -93,7 +93,7 @@ export const registerAutomationTools = (
     'swipe',
     {
       description:
-        'Swipe on the screen between two points. Best for directional gestures: switching pages, dismissing cards, pull-to-refresh, fling-to-delete, and drag-and-drop. For scrolling through content (lists, web pages, feeds), prefer the scroll tool instead — it uses trackpad-style scroll wheel events which are more reliable for content scrolling. Take a screenshot first to confirm the current screen state. Swiping up from the bottom edge will NOT go to the home screen — use the press_button tool with button "home" instead. IMPORTANT: Start and end swipes in empty areas between UI elements, not directly on icons or buttons (to avoid triggering edit/jiggle mode or unintended taps). For home screen page swiping, start from empty space between icon rows.',
+        'Swipe on the screen between two points. Best for directional gestures: dismissing cards, pull-to-refresh, fling-to-delete, and drag-and-drop. For scrolling through content (lists, web pages, feeds) and navigating home screen pages, prefer the scroll tool instead — it uses trackpad-style scroll wheel events which are more reliable. Take a screenshot first to confirm the current screen state. Swiping up from the bottom edge will NOT go to the home screen — use the press_button tool with button "home" instead. IMPORTANT: Start and end swipes in empty areas between UI elements, not directly on icons or buttons (to avoid triggering edit/jiggle mode or unintended taps).',
       inputSchema: {
         startX: z
           .number()
@@ -152,7 +152,7 @@ export const registerAutomationTools = (
     'scroll',
     {
       description:
-        'Scroll content at the given coordinates using trackpad-style scroll wheel events. Use this instead of swipe for scrolling through lists, web pages, feeds, and any scrollable content — it produces smoother, more reliable results. Only requires a single point (where to scroll) plus a delta amount, so no need to calculate start/end coordinates. Use swipe instead for directional gestures like switching pages, dismissing cards, pull-to-refresh, or drag-and-drop. Take a screenshot first to confirm the current screen state. The server auto-detects the macOS "Natural scrolling" setting at startup and compensates, so positive deltaY should consistently mean "scroll down" (content moves up). However, if the content moves the wrong way after scrolling, retry with the opposite sign (negate deltaY/deltaX).',
+        'Scroll content at the given coordinates using trackpad-style scroll wheel events. Use this instead of swipe for scrolling through lists, web pages, feeds, and any scrollable content — it produces smoother, more reliable results. Also preferred for navigating home screen pages (use deltaX for horizontal page scrolling). Only requires a single point (where to scroll) plus a delta amount, so no need to calculate start/end coordinates. Use swipe instead for directional gestures like dismissing cards, pull-to-refresh, or drag-and-drop. Take a screenshot first to confirm the current screen state. The server auto-detects the macOS "Natural scrolling" setting at startup and compensates, so positive deltaY should consistently mean "scroll down" (content moves up). However, if the content moves the wrong way after scrolling, retry with the opposite sign (negate deltaY/deltaX). If the scroll overshoots or undershoots, adjust deltaY/deltaX (controls distance) and speed (controls animation pace). Start with small deltas (e.g. 100–200) and increase if needed. Speed does not change how far the content scrolls — only how fast the animation plays.',
       inputSchema: {
         x: z
           .number()
@@ -172,13 +172,21 @@ export const registerAutomationTools = (
           .describe(
             'Vertical scroll amount in pixels. Positive = scroll down (content moves up), negative = scroll up (content moves down). Default 0. If the content moves the wrong way, negate the value and try again.',
           ),
+        speed: z
+          .number()
+          .min(0.1)
+          .max(5)
+          .optional()
+          .describe(
+            'Scroll speed multiplier (default 1). Higher values (e.g. 2–3) produce faster scrolling with more momentum. Lower values (e.g. 0.3–0.5) produce slower, more precise scrolling. Adjust this if the scroll animation speed is not as desired. The total scroll distance is controlled by deltaX/deltaY, not speed.',
+          ),
         screenshotDelay: screenshotDelaySchema,
       },
       annotations: { destructiveHint: false, openWorldHint: false },
     },
-    async ({ x, y, deltaX, deltaY, screenshotDelay }) => {
+    async ({ x, y, deltaX, deltaY, speed, screenshotDelay }) => {
       try {
-        await mirroringService.scroll({ x, y, deltaX, deltaY });
+        await mirroringService.scroll({ x, y, deltaX, deltaY, speed });
         return withScreenshotAfter(
           mirroringService,
           screenshotDelay,

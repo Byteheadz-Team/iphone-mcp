@@ -163,11 +163,13 @@ export class MirroringService extends Module {
     y,
     deltaX = 0,
     deltaY = 0,
+    speed,
   }: {
     x: number;
     y: number;
     deltaX?: number;
     deltaY?: number;
+    speed?: number;
   }): Promise<void> {
     const info = await this.refreshWindowInfo();
     const screen = this.toScreenCoords({ info, pixelX: x, pixelY: y });
@@ -180,6 +182,7 @@ export class MirroringService extends Module {
       ...screen,
       deltaX: deltaX * sign * SCROLL_SPEED,
       deltaY: deltaY * sign * SCROLL_SPEED,
+      speed,
     });
   }
 
