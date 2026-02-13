@@ -5,26 +5,30 @@
 /**
  * Scroll on the iPhone screen at the given coordinates.
  * Coordinates are in screenshot pixels (with grid overlay).
- * Positive deltaY scrolls down (content moves up).
  *
- * Usage: yarn scroll <x> <y> <deltaY>
- *        yarn scroll <x> <y> <deltaX> <deltaY>
+ * Usage: yarn scroll <x> <y> [direction] [distance]
+ *   direction — up, down, left, right (default: down)
+ *   distance  — scroll-wheel pixels (default: 150)
  */
 
-import { MirroringService } from '@services/mirroring/mirroring.service';
+import {
+  MirroringService,
+  type ScrollDirection,
+} from '@services/mirroring/mirroring.service';
+
+const VALID_DIRECTIONS = new Set(['up', 'down', 'left', 'right']);
 
 const main = async (): Promise<void> => {
   const args = process.argv.slice(2);
 
-  if (args.length < 3) {
-    console.error('Usage: yarn scroll <x> <y> <deltaY>');
-    console.error('       yarn scroll <x> <y> <deltaX> <deltaY>');
-    console.error('  x, y   — coordinates in screenshot pixels');
+  if (args.length < 2) {
+    console.error('Usage: yarn scroll <x> <y> [direction] [distance]');
+    console.error('  x, y      — coordinates in screenshot pixels');
     console.error(
-      '  deltaY — vertical scroll (positive = down, negative = up)',
+      '  direction — up, down, left, right (default: down)',
     );
     console.error(
-      '  deltaX — horizontal scroll (positive = right, negative = left)',
+      '  distance  — scroll-wheel pixels (default: 150, ~0.9 pages)',
     );
     process.exit(1);
   }
@@ -32,36 +36,49 @@ const main = async (): Promise<void> => {
   const x = Number(args[0]);
   const y = Number(args[1]);
 
-  let deltaX: number;
-  let deltaY: number;
-
-  if (args.length >= 4) {
-    deltaX = Number(args[2]);
-    deltaY = Number(args[3]);
-  } else {
-    deltaX = 0;
-    deltaY = Number(args[2]);
+  if (!Number.isFinite(x) || !Number.isFinite(y)) {
+    console.error('Error: x and y must be numbers');
+    process.exit(1);
   }
 
-  if (
-    !Number.isFinite(x) ||
-    !Number.isFinite(y) ||
-    !Number.isFinite(deltaX) ||
-    !Number.isFinite(deltaY)
-  ) {
-    console.error('Error: all values must be numbers');
-    process.exit(1);
+  let direction: ScrollDirection | undefined;
+  let distance: number | undefined;
+
+  if (args.length >= 3) {
+    const dirArg = args[2];
+    if (VALID_DIRECTIONS.has(dirArg)) {
+      direction = dirArg as ScrollDirection;
+    } else {
+      const parsed = Number(dirArg);
+      if (Number.isFinite(parsed) && parsed > 0) {
+        distance = parsed;
+      } else {
+        console.error(
+          `Error: invalid direction or distance "${dirArg}". ` +
+            'Direction must be up/down/left/right, distance must be a positive number.',
+        );
+        process.exit(1);
+      }
+    }
+  }
+
+  if (args.length >= 4) {
+    const parsed = Number(args[3]);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      console.error('Error: distance must be a positive number');
+      process.exit(1);
+    }
+    distance = parsed;
   }
 
   const service = new MirroringService();
 
   try {
     await service.start();
-    const parts = [];
-    if (deltaX !== 0) parts.push(`deltaX=${deltaX}`);
-    if (deltaY !== 0) parts.push(`deltaY=${deltaY}`);
-    console.log(`Scrolling at (${x}, ${y}) ${parts.join(', ')}...`);
-    await service.scroll({ x, y, deltaX, deltaY });
+    console.log(
+      `Scrolling ${direction ?? 'down'} by ${String(distance ?? 150)}px at (${x}, ${y})...`,
+    );
+    await service.scroll({ x, y, direction, distance });
     console.log('Done.');
   } finally {
     if (service.started) {

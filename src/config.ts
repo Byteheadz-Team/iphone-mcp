@@ -70,7 +70,6 @@ const config = {
   },
   mirroring: {
     appName: pkg.name,
-    scrollSpeed: 1,
     swipeSpeed: 2,
     launchTimeoutMs: parseIntFromEnvVar({
       envVar: 'IPHONE_MCP_LAUNCH_TIMEOUT_MS',

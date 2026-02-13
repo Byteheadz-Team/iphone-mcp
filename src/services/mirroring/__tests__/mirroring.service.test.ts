@@ -187,7 +187,7 @@ describe('MirroringService', () => {
   });
 
   describe('scroll', () => {
-    it('negates deltas when natural scrolling is ON', async () => {
+    it('scrolls down by default with natural scrolling ON', async () => {
       const mock = createMockClient();
       const service = new MirroringService(mock as unknown as MirroringClient);
       await service.start();
@@ -196,18 +196,93 @@ describe('MirroringService', () => {
         shortSide: 400 * SCALE,
         targetDivisions: config.mirroring.overlayGridDivisions,
       }).padding;
-      await service.scroll({ x: 200, y: 400, deltaX: 10, deltaY: -50 });
+      await service.scroll({ x: 200, y: 400 });
 
-      const s = config.mirroring.scrollSpeed;
       expect(mock.postScroll).toHaveBeenCalledWith({
         x: 100 + (200 - p) / SCALE,
         y: 200 + (400 - p) / SCALE,
-        deltaX: -10 * s,
-        deltaY: 50 * s,
+        deltaX: 0,
+        deltaY: -150,
       });
     });
 
-    it('preserves deltas when natural scrolling is OFF', async () => {
+    it('scrolls up (negated twice: up=-1, natural=-1)', async () => {
+      const mock = createMockClient();
+      const service = new MirroringService(mock as unknown as MirroringClient);
+      await service.start();
+
+      const p = computeGridLayout({
+        shortSide: 400 * SCALE,
+        targetDivisions: config.mirroring.overlayGridDivisions,
+      }).padding;
+      await service.scroll({ x: 200, y: 400, direction: 'up' });
+
+      expect(mock.postScroll).toHaveBeenCalledWith({
+        x: 100 + (200 - p) / SCALE,
+        y: 200 + (400 - p) / SCALE,
+        deltaX: 0,
+        deltaY: 150,
+      });
+    });
+
+    it('scrolls left with deltaX and deltaY=0', async () => {
+      const mock = createMockClient();
+      const service = new MirroringService(mock as unknown as MirroringClient);
+      await service.start();
+
+      const p = computeGridLayout({
+        shortSide: 400 * SCALE,
+        targetDivisions: config.mirroring.overlayGridDivisions,
+      }).padding;
+      await service.scroll({ x: 200, y: 400, direction: 'left' });
+
+      expect(mock.postScroll).toHaveBeenCalledWith({
+        x: 100 + (200 - p) / SCALE,
+        y: 200 + (400 - p) / SCALE,
+        deltaX: 150,
+        deltaY: 0,
+      });
+    });
+
+    it('scrolls right with deltaX and deltaY=0', async () => {
+      const mock = createMockClient();
+      const service = new MirroringService(mock as unknown as MirroringClient);
+      await service.start();
+
+      const p = computeGridLayout({
+        shortSide: 400 * SCALE,
+        targetDivisions: config.mirroring.overlayGridDivisions,
+      }).padding;
+      await service.scroll({ x: 200, y: 400, direction: 'right' });
+
+      expect(mock.postScroll).toHaveBeenCalledWith({
+        x: 100 + (200 - p) / SCALE,
+        y: 200 + (400 - p) / SCALE,
+        deltaX: -150,
+        deltaY: 0,
+      });
+    });
+
+    it('uses custom distance', async () => {
+      const mock = createMockClient();
+      const service = new MirroringService(mock as unknown as MirroringClient);
+      await service.start();
+
+      const p = computeGridLayout({
+        shortSide: 400 * SCALE,
+        targetDivisions: config.mirroring.overlayGridDivisions,
+      }).padding;
+      await service.scroll({ x: 200, y: 400, direction: 'down', distance: 300 });
+
+      expect(mock.postScroll).toHaveBeenCalledWith({
+        x: 100 + (200 - p) / SCALE,
+        y: 200 + (400 - p) / SCALE,
+        deltaX: 0,
+        deltaY: -300,
+      });
+    });
+
+    it('does not negate when natural scrolling is OFF', async () => {
       const mock = createMockClient();
       mock.isNaturalScrolling.mockResolvedValue(false);
       const service = new MirroringService(mock as unknown as MirroringClient);
@@ -217,14 +292,13 @@ describe('MirroringService', () => {
         shortSide: 400 * SCALE,
         targetDivisions: config.mirroring.overlayGridDivisions,
       }).padding;
-      await service.scroll({ x: 200, y: 400, deltaX: 10, deltaY: -50 });
+      await service.scroll({ x: 200, y: 400, direction: 'down', distance: 150 });
 
-      const s = config.mirroring.scrollSpeed;
       expect(mock.postScroll).toHaveBeenCalledWith({
         x: 100 + (200 - p) / SCALE,
         y: 200 + (400 - p) / SCALE,
-        deltaX: 10 * s,
-        deltaY: -50 * s,
+        deltaX: 0,
+        deltaY: 150,
       });
     });
   });

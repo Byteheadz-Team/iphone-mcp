@@ -13,11 +13,12 @@ import config from '~/config';
 
 import { type ButtonName, SwipeEasing } from './mirroring.types';
 
+export type ScrollDirection = 'up' | 'down' | 'left' | 'right';
+
 const coordinateSchema = z.number().finite();
 
 const SCALE = config.mirroring.screenshotScale;
 const TARGET_DIVISIONS = config.mirroring.overlayGridDivisions;
-const SCROLL_SPEED = config.mirroring.scrollSpeed;
 const SWIPE_SPEED = config.mirroring.swipeSpeed;
 const MAX_DIMENSION = config.mirroring.maxPxSingleDimension;
 const COMPRESS_PNG_PALETTE = config.mirroring.compressPngPalette;
@@ -173,28 +174,26 @@ export class MirroringService extends Module {
   async scroll({
     x,
     y,
-    deltaX = 0,
-    deltaY = 0,
-    speed,
+    direction = 'down',
+    distance = 150,
   }: {
     x: number;
     y: number;
-    deltaX?: number;
-    deltaY?: number;
-    speed?: number;
+    direction?: ScrollDirection;
+    distance?: number;
   }): Promise<void> {
     const info = await this.refreshWindowInfo();
     const screen = this.toScreenCoords({ info, pixelX: x, pixelY: y });
-    // CGEventCreateScrollWheelEvent posted at kCGHIDEventTap is subject to
-    // the macOS "Natural scrolling" preference, which inverts the direction.
-    // Negate the deltas when natural scrolling is ON so the tool contract
-    // stays consistent: positive deltaY = scroll down (content moves up).
     const sign = this.naturalScrolling ? -1 : 1;
+
+    const horizontal = direction === 'left' || direction === 'right';
+    const negative = direction === 'up' || direction === 'left';
+    const directed = (negative ? -distance : distance) * sign;
+
     await this.client.postScroll({
       ...screen,
-      deltaX: deltaX * sign * SCROLL_SPEED,
-      deltaY: deltaY * sign * SCROLL_SPEED,
-      speed,
+      deltaX: horizontal ? directed : 0,
+      deltaY: horizontal ? 0 : directed,
     });
   }
 

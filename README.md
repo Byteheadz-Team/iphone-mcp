@@ -147,7 +147,7 @@ Runs the server with `tsx watch` for automatic restarts on file changes.
 | `tap`          | Tap at coordinates (in screenshot pixels)                                                                                     | `x`, `y`, `screenshotDelay?`                                                   |
 | `long_press`   | Press and hold at coordinates for a duration                                                                                  | `x`, `y`, `duration` (seconds), `screenshotDelay?`                             |
 | `swipe`        | Swipe between two points -- best for directional gestures (dismissing, pull-to-refresh, drag-and-drop)                        | `startX`, `startY`, `endX`, `endY`, `duration?`, `easing?`, `screenshotDelay?` |
-| `scroll`       | Scroll content at a point -- best for scrolling lists, web pages, feeds, and home screen pages (trackpad-style scroll events) | `x`, `y`, `deltaX?`, `deltaY?`, `speed?`, `screenshotDelay?`                   |
+| `scroll`       | Scroll content at a point -- best for scrolling lists, web pages, feeds, and home screen pages (trackpad-style scroll events) | `x`, `y`, `direction?`, `distance?`, `screenshotDelay?`                         |
 | `type_text`    | Type text into the focused input field. Supports special keys: `\b` backspace, `\t` tab, `\x7f` forward delete, `\x1b` escape | `text`, `screenshotDelay?`                                                     |
 | `press_button` | Press a device button (home, app_switcher, spotlight)                                                                         | `button`, `screenshotDelay?`                                                   |
 
@@ -205,8 +205,7 @@ This turns out to be one of the most impactful parts of the whole system. Withou
 | `yarn doctor`                                | Preflight check (macOS, permissions, device)                     |
 | `yarn screenshot`                            | Capture iPhone screen with grid overlay, save to `_screenshots/` |
 | `yarn tap <x> <y>`                           | Tap at screenshot coordinates                                    |
-| `yarn scroll <x> <y> <deltaY>`               | Scroll at a point (positive deltaY = scroll down)                |
-| `yarn scroll <x> <y> <deltaX> <deltaY>`      | Scroll with both horizontal and vertical deltas                  |
+| `yarn scroll <x> <y> [direction] [distance]`  | Scroll at a point (direction: up/down/left/right, distance: pixels) |
 | `yarn swipe <startX> <startY> <endX> <endY>` | Swipe between two points                                         |
 | `yarn test`                                  | Run all tests                                                    |
 | `yarn typecheck`                             | Type-check without emitting                                      |
@@ -241,6 +240,7 @@ Configuration is via environment variables (all prefixed with `IPHONE_MCP_`):
 
 **"iPhone Mirroring window did not appear"**
 
+- See Apple's guide on [setting up iPhone Mirroring](https://support.apple.com/en-us/120421)
 - Open iPhone Mirroring manually first (`open -a "iPhone Mirroring"`) to ensure it works
 - Both devices must be signed in with the same Apple ID
 - Bluetooth and WiFi must be on
