@@ -22,7 +22,9 @@ const parseIntFromEnvVar = (envVar: string, fallback: number): number => {
   const parsed = Number(raw);
   if (Number.isNaN(parsed) || parsed < 1 || !Number.isInteger(parsed)) {
     // stderr directly — createLogger depends on config, so we can't use it here
-    console.error(`[config] Invalid value for ${envVar}="${raw}", using default ${fallback}`);
+    console.error(
+      `[config] Invalid value for ${envVar}="${raw}", using default ${fallback}`,
+    );
     return fallback;
   }
   return parsed;
@@ -37,7 +39,7 @@ const config = {
   mirroring: {
     appName: pkg.name,
     launchTimeoutMs: parseIntFromEnvVar('IPHONE_MCP_LAUNCH_TIMEOUT_MS', 10_000),
-    screenshotScale: parseIntFromEnvVar('IPHONE_MCP_SCREENSHOT_SCALE', 2),
+    screenshotScale: parseIntFromEnvVar('IPHONE_MCP_SCREENSHOT_SCALE', 1),
     overlayGridDivisions: parseIntFromEnvVar('IPHONE_MCP_GRID_DIVISIONS', 9),
     scrollSpeed: 1,
     swipeSpeed: 2,
