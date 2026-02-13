@@ -11,7 +11,7 @@ MCP server that controls a physical iPhone via macOS iPhone Mirroring. See @READ
 - `yarn lint` — eslint with cache
 - `yarn check` — format + lint fix + typecheck (run before committing)
 - `yarn doctor` — preflight check (macOS version, permissions, device detection)
-- `yarn screenshot` — capture iPhone screen with grid overlay, save to current directory
+- `yarn screenshot` — capture iPhone screen with grid overlay, save to `_screenshots/`
 - `yarn tap <x> <y>` — tap at screenshot coordinates
 - `yarn scroll <x> <y> <deltaY>` — scroll at a point (positive deltaY = scroll down)
 - `yarn swipe <startX> <startY> <endX> <endY>` — swipe between two points
@@ -27,6 +27,7 @@ Run a single test file: `yarn vitest run src/path/to/file.test.ts`
 - Import order enforced by eslint: builtins, externals, internals (aliases), parent, sibling — with blank lines between groups, alphabetized.
 - Node built-in imports always use `node:` prefix (e.g. `node:net`, `node:tls`).
 - Arrow functions only — never use hoisted `function` declarations. Use `const fn = () => {}`.
+- Functions with 2+ parameters must use a single destructured object argument with named fields. Positional args are fine for single-parameter functions.
 - Single quotes, 2-space indent, trailing commas (prettier handles this).
 
 ## Architecture
@@ -43,7 +44,7 @@ Build uses `tsup` (esbuild) which bundles everything into a single `dist/index.j
 
 ## iPhone communication
 
-All interaction goes through **iPhone Mirroring** (macOS Sequoia's `com.apple.ScreenContinuity`), which mirrors the iPhone screen to a macOS window. The server takes screenshots via `screencapture` (resampled to 2x via `sips`), injects clicks/drags/scroll-wheel events via `CGEvent` (JXA/osascript), and types via AppleScript `keystroke`. The window is activated before each input event. Zero setup beyond what Apple provides. At startup, the server checks Accessibility permission via `AXIsProcessTrustedWithOptions` (which prompts the user if not granted) and Screen Recording permission by attempting a `screencapture` probe. Permission state is cached in `MirroringService.permissionWarnings` and surfaced as warning text in tool responses (e.g. "Accessibility permission is not granted for Terminal...") so the AI client can relay the message to the user.
+All interaction goes through **iPhone Mirroring** (macOS Sequoia's `com.apple.ScreenContinuity`), which mirrors the iPhone screen to a macOS window. The server takes screenshots via `screencapture` (resampled via `sips` to the configured scale, default 1x), injects clicks/drags/scroll-wheel events via `CGEvent` (JXA/osascript), and types via AppleScript `keystroke`. The window is activated before each input event. Zero setup beyond what Apple provides. At startup, the server checks Accessibility permission via `AXIsProcessTrustedWithOptions` (which prompts the user if not granted) and Screen Recording permission by attempting a `screencapture` probe. Permission state is cached in `MirroringService.permissionWarnings` and surfaced as warning text in tool responses (e.g. "Accessibility permission is not granted for Terminal...") so the AI client can relay the message to the user.
 
 ## Testing
 
@@ -56,7 +57,7 @@ All interaction goes through **iPhone Mirroring** (macOS Sequoia's `com.apple.Sc
 ## Common gotchas
 
 - `Module.start()` and `Module.stop()` return `Promise<void> | void` — always `await` them to avoid `@typescript-eslint/no-floating-promises`.
-- Coordinate mapping: screenshots are captured at 2x resolution (`config.mirroring.screenshotScale`), then a grid overlay is composited via `sharp` (SVG over the image). Grid layout is computed dynamically by `computeGridLayout()` based on the image's short side and `config.mirroring.overlayGridDivisions` (default 9). The grid adds a dark margin on **all four sides** of the screenshot with labeled reference lines every `spacing` pixels. The AI sends coordinates in the padded image space; `MirroringService.toScreenCoords()` subtracts the padding offset and divides by the scale factor: `screen_x = window.x + (pixel_x - padding) / scale`, where `padding` comes from the computed `GridLayout`.
+- Coordinate mapping: screenshots are captured at the configured resolution (`config.mirroring.screenshotScale`, default 1), then a grid overlay is composited via `sharp` (SVG over the image). The overlay output is compressed via `config.mirroring.compressPngPalette` (default `true`, env var `IPHONE_MCP_PNG_PALETTE`) and `config.mirroring.pngCompressionLevel` (default `6`, env var `IPHONE_MCP_PNG_COMPRESSION_LEVEL`). Grid layout is computed dynamically by `computeGridLayout()` based on the image's short side and `config.mirroring.overlayGridDivisions` (default 9). The grid adds a dark margin on **all four sides** of the screenshot with labeled reference lines every `spacing` pixels. The AI sends coordinates in the padded image space; `MirroringService.toScreenCoords()` subtracts the padding offset and divides by the scale factor: `screen_x = window.x + (pixel_x - padding) / scale`, where `padding` comes from the computed `GridLayout`.
 - The screenshot output includes the window title bar. Coordinates the AI provides from the screenshot already account for it.
 - `sharp` is the only native npm dependency. It's marked `external` in `tsup.config.ts` so it's not bundled — it must be installed in `node_modules` at runtime. Ships prebuilt binaries for macOS arm64/x64.
 - `MirroringClient` activates the iPhone Mirroring window before every input event (click, drag, type). Without this, `CGEvent` posts may be silently ignored if the window isn't frontmost.

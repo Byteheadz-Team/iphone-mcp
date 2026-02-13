@@ -19,6 +19,8 @@ const SCALE = config.mirroring.screenshotScale;
 const TARGET_DIVISIONS = config.mirroring.overlayGridDivisions;
 const SCROLL_SPEED = config.mirroring.scrollSpeed;
 const SWIPE_SPEED = config.mirroring.swipeSpeed;
+const COMPRESS_PNG_PALETTE = config.mirroring.compressPngPalette;
+const PNG_COMPRESSION_LEVEL = config.mirroring.pngCompressionLevel;
 
 export interface ScreenInfo {
   width: number;
@@ -107,6 +109,8 @@ export class MirroringService extends Module {
       windowId: info.windowId,
       targetWidth: info.width * SCALE,
       gridDivisions: TARGET_DIVISIONS,
+      compressPngPalette: COMPRESS_PNG_PALETTE,
+      pngCompressionLevel: PNG_COMPRESSION_LEVEL,
     });
   }
 

@@ -105,9 +105,13 @@ const buildGridSvg = ({
 export const overlayGrid = async ({
   imageBuffer,
   targetDivisions,
+  compressPngPalette,
+  pngCompressionLevel,
 }: {
   imageBuffer: Buffer;
   targetDivisions: number;
+  compressPngPalette?: boolean;
+  pngCompressionLevel?: number;
 }): Promise<Buffer> => {
   const metadata = await sharp(imageBuffer).metadata();
   const width = metadata.width ?? 0;
@@ -138,7 +142,10 @@ export const overlayGrid = async ({
       { input: imageBuffer, top: layout.padding, left: layout.padding },
       { input: Buffer.from(svg), top: 0, left: 0 },
     ])
-    .png()
+    .png({
+      compressionLevel: pngCompressionLevel,
+      ...(compressPngPalette ? { palette: true } : {}),
+    })
     .toBuffer();
 };
 

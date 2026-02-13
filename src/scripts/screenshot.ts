@@ -9,7 +9,8 @@
  * Run with: yarn screenshot
  */
 
-import { writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
 import { MirroringService } from '@services/mirroring/mirroring.service';
 
@@ -23,7 +24,9 @@ async function main(): Promise<void> {
     console.log('Capturing screenshot...');
     const buffer = await service.takeScreenshot();
 
-    const filename = `iphone-screenshot-${Date.now()}.png`;
+    const dir = '_screenshots';
+    await mkdir(dir, { recursive: true });
+    const filename = join(dir, `iphone-screenshot-${Date.now()}.png`);
     await writeFile(filename, buffer);
 
     console.log(`Saved to ${filename}`);

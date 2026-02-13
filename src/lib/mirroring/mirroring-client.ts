@@ -103,10 +103,14 @@ JSON.stringify({ x, y, width, height, windowId });
     windowId,
     targetWidth,
     gridDivisions,
+    compressPngPalette,
+    pngCompressionLevel,
   }: {
     windowId: number;
     targetWidth?: number;
     gridDivisions?: number;
+    compressPngPalette?: boolean;
+    pngCompressionLevel?: number;
   }): Promise<Buffer> {
     const tmpPath = join(tmpdir(), `iphone-mcp-screenshot-${Date.now()}.png`);
 
@@ -139,6 +143,8 @@ JSON.stringify({ x, y, width, height, windowId });
         return overlayGrid({
           imageBuffer: buffer,
           targetDivisions: gridDivisions,
+          compressPngPalette,
+          pngCompressionLevel,
         });
       }
 

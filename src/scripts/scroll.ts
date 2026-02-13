@@ -20,8 +20,12 @@ const main = async (): Promise<void> => {
     console.error('Usage: yarn scroll <x> <y> <deltaY>');
     console.error('       yarn scroll <x> <y> <deltaX> <deltaY>');
     console.error('  x, y   — coordinates in screenshot pixels');
-    console.error('  deltaY — vertical scroll (positive = down, negative = up)');
-    console.error('  deltaX — horizontal scroll (positive = right, negative = left)');
+    console.error(
+      '  deltaY — vertical scroll (positive = down, negative = up)',
+    );
+    console.error(
+      '  deltaX — horizontal scroll (positive = right, negative = left)',
+    );
     process.exit(1);
   }
 
