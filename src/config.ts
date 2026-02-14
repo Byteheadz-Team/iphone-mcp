@@ -1,3 +1,9 @@
+import {
+  parseBoolFromEnvVar,
+  parseFloatFromEnvVar,
+  parseIntFromEnvVar,
+} from '@lib/utils';
+
 import pkg from '../package.json';
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'silent';
@@ -16,52 +22,6 @@ const getLogLevel = (): LogLevel => {
   return 'info';
 };
 
-const parseIntFromEnvVar = ({
-  envVar,
-  fallback,
-  min,
-  max,
-}: {
-  envVar: string;
-  fallback: number;
-  min?: number;
-  max?: number;
-}): number => {
-  const raw = process.env[envVar];
-  if (raw === undefined) return fallback;
-  const parsed = Number(raw);
-  if (
-    Number.isNaN(parsed) ||
-    !Number.isInteger(parsed) ||
-    (min !== undefined && parsed < min) ||
-    (max !== undefined && parsed > max)
-  ) {
-    // stderr directly — createLogger depends on config, so we can't use it here
-    console.error(
-      `[config] Invalid value for ${envVar}="${raw}", using default ${fallback}`,
-    );
-    return fallback;
-  }
-  return parsed;
-};
-
-const parseBoolFromEnvVar = ({
-  envVar,
-  fallback,
-}: {
-  envVar: string;
-  fallback: boolean;
-}): boolean => {
-  const raw = process.env[envVar];
-  if (raw === undefined) return fallback;
-  if (raw === '1' || raw === 'true') return true;
-  if (raw === '0' || raw === 'false') return false;
-  console.error(
-    `[config] Invalid value for ${envVar}="${raw}", using default ${String(fallback)}`,
-  );
-  return fallback;
-};
-
 const config = {
   name: pkg.name,
   version: pkg.version,
@@ -76,10 +36,10 @@ const config = {
       fallback: 10_000,
       min: 1,
     }),
-    screenshotScale: parseIntFromEnvVar({
+    screenshotScale: parseFloatFromEnvVar({
       envVar: 'IPHONE_MCP_SCREENSHOT_SCALE',
       fallback: 1,
-      min: 1,
+      min: 0.1,
     }),
     overlayGridDivisions: parseIntFromEnvVar({
       envVar: 'IPHONE_MCP_GRID_DIVISIONS',

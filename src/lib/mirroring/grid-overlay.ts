@@ -17,7 +17,7 @@ export const computeGridLayout = ({
 }): GridLayout => {
   const spacing = Math.round(shortSide / targetDivisions);
   const padding = Math.round(spacing * 0.7);
-  const fontSize = Math.round(padding * 0.53);
+  const fontSize = Math.round(padding * 0.65);
   const strokeWidth = Math.max(2, Math.round(shortSide / 200));
   const tick = Math.round(padding * 0.35);
   return { spacing, padding, fontSize, strokeWidth, tick };
@@ -60,7 +60,7 @@ const buildGridSvg = ({
   );
 
   // Grid lines — solid, semi-transparent gray
-  const lineAttrs = `stroke="rgba(180,180,180,0.4)" stroke-width="${strokeWidth}"`;
+  const lineAttrs = `stroke="rgba(255,0,255,0.45)" stroke-width="${strokeWidth}"`;
 
   // Vertical lines — tick into top margin, extend to bottom edge
   for (let i = 0; padding + i * spacing <= totalWidth; i++) {

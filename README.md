@@ -144,10 +144,10 @@ Runs the server with `tsx watch` for automatic restarts on file changes.
 
 | Tool           | Description                                                                                                                   | Parameters                                                                     |
 | -------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `tap`          | Tap at coordinates (in screenshot pixels). Supports multi-tap (double-tap, triple-tap, etc.)                                  | `x`, `y`, `numTaps?`, `screenshotDelay?`                                  |
+| `tap`          | Tap at coordinates (in screenshot pixels). Supports multi-tap (double-tap, triple-tap, etc.)                                  | `x`, `y`, `numTaps?`, `screenshotDelay?`                                       |
 | `long_press`   | Press and hold at coordinates for a duration                                                                                  | `x`, `y`, `duration` (seconds), `screenshotDelay?`                             |
 | `swipe`        | Swipe between two points -- best for directional gestures (dismissing, pull-to-refresh, drag-and-drop)                        | `startX`, `startY`, `endX`, `endY`, `duration?`, `easing?`, `screenshotDelay?` |
-| `scroll`       | Scroll content at a point -- best for scrolling lists, web pages, feeds, and home screen pages (trackpad-style scroll events) | `x`, `y`, `direction?`, `distance?`, `screenshotDelay?`                         |
+| `scroll`       | Scroll content at a point -- best for scrolling lists, web pages, feeds, and home screen pages (trackpad-style scroll events) | `x`, `y`, `direction?`, `distance?`, `screenshotDelay?`                        |
 | `type_text`    | Type text into the focused input field. Supports special keys: `\b` backspace, `\t` tab, `\x7f` forward delete, `\x1b` escape | `text`, `screenshotDelay?`                                                     |
 | `press_button` | Press a device button (home, app_switcher, spotlight)                                                                         | `button`, `screenshotDelay?`                                                   |
 
@@ -197,35 +197,35 @@ This turns out to be one of the most impactful parts of the whole system. Withou
 
 ## Scripts
 
-| Command                                      | Description                                                      |
-| -------------------------------------------- | ---------------------------------------------------------------- |
-| `yarn build`                                 | Bundle with tsup to `dist/`                                      |
-| `yarn start`                                 | Run the compiled server                                          |
-| `yarn dev`                                   | Run with auto-restart on changes                                 |
-| `yarn doctor`                                | Preflight check (macOS, permissions, device)                     |
-| `yarn screenshot`                            | Capture iPhone screen with grid overlay, save to `_screenshots/` |
-| `yarn tap <x> <y>`                           | Tap at screenshot coordinates                                    |
-| `yarn scroll <x> <y> [direction] [distance]`  | Scroll at a point (direction: up/down/left/right, distance: pixels) |
-| `yarn swipe <startX> <startY> <endX> <endY>` | Swipe between two points                                         |
-| `yarn test`                                  | Run all tests                                                    |
-| `yarn typecheck`                             | Type-check without emitting                                      |
-| `yarn lint`                                  | Lint with ESLint                                                 |
-| `yarn format`                                | Format with Prettier                                             |
-| `yarn check`                                 | Format + lint fix + typecheck                                    |
+| Command                                      | Description                                                         |
+| -------------------------------------------- | ------------------------------------------------------------------- |
+| `yarn build`                                 | Bundle with tsup to `dist/`                                         |
+| `yarn start`                                 | Run the compiled server                                             |
+| `yarn dev`                                   | Run with auto-restart on changes                                    |
+| `yarn doctor`                                | Preflight check (macOS, permissions, device)                        |
+| `yarn screenshot`                            | Capture iPhone screen with grid overlay, save to `_screenshots/`    |
+| `yarn tap <x> <y>`                           | Tap at screenshot coordinates                                       |
+| `yarn scroll <x> <y> [direction] [distance]` | Scroll at a point (direction: up/down/left/right, distance: pixels) |
+| `yarn swipe <startX> <startY> <endX> <endY>` | Swipe between two points                                            |
+| `yarn test`                                  | Run all tests                                                       |
+| `yarn typecheck`                             | Type-check without emitting                                         |
+| `yarn lint`                                  | Lint with ESLint                                                    |
+| `yarn format`                                | Format with Prettier                                                |
+| `yarn check`                                 | Format + lint fix + typecheck                                       |
 
 ## Configuration
 
 Configuration is via environment variables (all prefixed with `IPHONE_MCP_`):
 
-| Variable                           | Default | Description                                                                            |
-| ---------------------------------- | ------- | -------------------------------------------------------------------------------------- |
-| `IPHONE_MCP_LOG_LEVEL`             | `info`  | Log level (`debug`, `info`, `warn`, `error`, `silent`)                                 |
-| `IPHONE_MCP_SCREENSHOT_SCALE`      | `1`     | Screenshot resolution multiplier. Higher values increase detail and token usage        |
-| `IPHONE_MCP_GRID_DIVISIONS`        | `9`     | Number of grid divisions on the coordinate overlay. More divisions = finer precision   |
-| `IPHONE_MCP_PNG_PALETTE`           | `true`  | Enable palette-based PNG (256 colors) for smaller screenshots (`true`/`false`/`1`/`0`) |
-| `IPHONE_MCP_PNG_COMPRESSION_LEVEL` | `6`     | PNG zlib compression level, 0-9 (higher = smaller file but slower)                     |
-| `IPHONE_MCP_MAX_PX_SINGLE_DIMENSION` | `1568` | Max pixels for the longest screenshot dimension. Prevents oversized images for LLMs |
-| `IPHONE_MCP_LAUNCH_TIMEOUT_MS`     | `10000` | How long to wait for iPhone Mirroring to launch (milliseconds)                         |
+| Variable                             | Default | Description                                                                            |
+| ------------------------------------ | ------- | -------------------------------------------------------------------------------------- |
+| `IPHONE_MCP_LOG_LEVEL`               | `info`  | Log level (`debug`, `info`, `warn`, `error`, `silent`)                                 |
+| `IPHONE_MCP_SCREENSHOT_SCALE`        | `1.5`   | Screenshot resolution multiplier. Higher values increase detail and token usage        |
+| `IPHONE_MCP_GRID_DIVISIONS`          | `9`     | Number of grid divisions on the coordinate overlay. More divisions = finer precision   |
+| `IPHONE_MCP_PNG_PALETTE`             | `true`  | Enable palette-based PNG (256 colors) for smaller screenshots (`true`/`false`/`1`/`0`) |
+| `IPHONE_MCP_PNG_COMPRESSION_LEVEL`   | `6`     | PNG zlib compression level, 0-9 (higher = smaller file but slower)                     |
+| `IPHONE_MCP_MAX_PX_SINGLE_DIMENSION` | `1568`  | Max pixels for the longest screenshot dimension. Prevents oversized images for LLMs    |
+| `IPHONE_MCP_LAUNCH_TIMEOUT_MS`       | `10000` | How long to wait for iPhone Mirroring to launch (milliseconds)                         |
 
 ## Troubleshooting
 
