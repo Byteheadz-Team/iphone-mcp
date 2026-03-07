@@ -8,7 +8,7 @@
  *
  * Usage: yarn scroll <x> <y> [direction] [distance]
  *   direction — up, down, left, right (default: down)
- *   distance  — scroll-wheel pixels (default: 150)
+ *   distance  — scroll-wheel pixels (default: half the screen dimension)
  */
 
 import {
@@ -24,11 +24,9 @@ const main = async (): Promise<void> => {
   if (args.length < 2) {
     console.error('Usage: yarn scroll <x> <y> [direction] [distance]');
     console.error('  x, y      — coordinates in screenshot pixels');
+    console.error('  direction — up, down, left, right (default: down)');
     console.error(
-      '  direction — up, down, left, right (default: down)',
-    );
-    console.error(
-      '  distance  — scroll-wheel pixels (default: 150, ~0.9 pages)',
+      '  distance  — scroll-wheel pixels (default: half the screen dimension)',
     );
     process.exit(1);
   }
@@ -76,9 +74,9 @@ const main = async (): Promise<void> => {
   try {
     await service.start();
     console.log(
-      `Scrolling ${direction ?? 'down'} by ${String(distance ?? 150)}px at (${x}, ${y})...`,
+      `Scrolling ${direction ?? 'down'} by ${String(distance ?? 'default')}px at (${x}, ${y})...`,
     );
-    await service.scroll({ x, y, direction, distance });
+    await service.scroll({ x, y, direction, distance, durationMs: 1000 });
     console.log('Done.');
   } finally {
     if (service.started) {

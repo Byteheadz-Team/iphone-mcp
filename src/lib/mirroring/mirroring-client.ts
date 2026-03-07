@@ -276,6 +276,7 @@ $.CGEventPost($.kCGHIDEventTap, mouseUp);
     endY,
     durationMs,
     easing = SwipeEasing.Linear,
+    stepIntervalMs = 50,
   }: {
     startX: number;
     startY: number;
@@ -283,10 +284,11 @@ $.CGEventPost($.kCGHIDEventTap, mouseUp);
     endY: number;
     durationMs: number;
     easing?: SwipeEasing;
+    stepIntervalMs?: number;
   }): Promise<void> {
     await this.activate();
 
-    const steps = Math.max(Math.round(durationMs / 16), 5);
+    const steps = Math.max(Math.round(durationMs / stepIntervalMs), 5);
     const delayPerStep = durationMs / 1000 / steps;
 
     const script = `
@@ -338,25 +340,29 @@ $.CGEventPost($.kCGHIDEventTap, mouseUp);
     y,
     deltaX,
     deltaY,
-    durationMs = 1000,
+    durationMs,
+    stepIntervalMs = 50,
   }: {
     x: number;
     y: number;
     deltaX: number;
     deltaY: number;
-    durationMs?: number;
+    durationMs: number;
+    stepIntervalMs?: number;
   }): Promise<void> {
     await this.activate();
 
     // Spread scroll events over the requested duration.
-    const stepInterval = 0.008; // 8ms between events
-    const targetSteps = Math.max(Math.round(durationMs / 8), 1);
+    const stepDelaySec = stepIntervalMs / 1000;
+    const targetSteps = Math.max(
+      Math.round(durationMs / stepIntervalMs),
+      1,
+    );
     const maxDelta = Math.max(Math.abs(deltaY), Math.abs(deltaX), 1);
     const stepSize = Math.max(2, Math.round(maxDelta / targetSteps));
     const totalSteps = Math.max(Math.round(maxDelta / stepSize), 1);
     const dyPerStep = deltaY !== 0 ? Math.round(deltaY / totalSteps) : 0;
     const dxPerStep = deltaX !== 0 ? Math.round(deltaX / totalSteps) : 0;
-    const stepDelay = stepInterval;
 
     // Use pixel-based scrolling (unit=1) for accurate distance control.
     // Avoid continuous/phase flags — iPhone Mirroring misinterprets trackpad
@@ -378,7 +384,7 @@ for (let i = 0; i < steps; i++) {
   const dx = last ? totalDx - dxPerStep * (steps - 1) : dxPerStep;
   const e = $.CGEventCreateScrollWheelEvent(null, 1, 2, dy, dx);
   $.CGEventPost($.kCGHIDEventTap, e);
-  delay(${stepDelay});
+  delay(${stepDelaySec});
 }
 `;
 

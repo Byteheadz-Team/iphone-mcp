@@ -201,6 +201,7 @@ describe('MirroringService', () => {
         endY: 200 + (600 - p) / SCALE,
         durationMs: 500 / config.mirroring.swipeSpeed,
         easing: SwipeEasing.Linear,
+        stepIntervalMs: config.mirroring.motionStepIntervalMs,
       });
     });
   });
@@ -221,7 +222,9 @@ describe('MirroringService', () => {
         x: 100 + (200 - p) / SCALE,
         y: 200 + (400 - p) / SCALE,
         deltaX: 0,
-        deltaY: -150,
+        deltaY: -400,
+        durationMs: 1000,
+        stepIntervalMs: config.mirroring.motionStepIntervalMs,
       });
     });
 
@@ -240,7 +243,9 @@ describe('MirroringService', () => {
         x: 100 + (200 - p) / SCALE,
         y: 200 + (400 - p) / SCALE,
         deltaX: 0,
-        deltaY: 150,
+        deltaY: 400,
+        durationMs: 1000,
+        stepIntervalMs: config.mirroring.motionStepIntervalMs,
       });
     });
 
@@ -258,8 +263,10 @@ describe('MirroringService', () => {
       expect(mock.postScroll).toHaveBeenCalledWith({
         x: 100 + (200 - p) / SCALE,
         y: 200 + (400 - p) / SCALE,
-        deltaX: 150,
+        deltaX: 200,
         deltaY: 0,
+        durationMs: 1000,
+        stepIntervalMs: config.mirroring.motionStepIntervalMs,
       });
     });
 
@@ -277,8 +284,10 @@ describe('MirroringService', () => {
       expect(mock.postScroll).toHaveBeenCalledWith({
         x: 100 + (200 - p) / SCALE,
         y: 200 + (400 - p) / SCALE,
-        deltaX: -150,
+        deltaX: -200,
         deltaY: 0,
+        durationMs: 1000,
+        stepIntervalMs: config.mirroring.motionStepIntervalMs,
       });
     });
 
@@ -298,6 +307,8 @@ describe('MirroringService', () => {
         y: 200 + (400 - p) / SCALE,
         deltaX: 0,
         deltaY: -300,
+        durationMs: 1000,
+        stepIntervalMs: config.mirroring.motionStepIntervalMs,
       });
     });
 
@@ -318,6 +329,8 @@ describe('MirroringService', () => {
         y: 200 + (400 - p) / SCALE,
         deltaX: 0,
         deltaY: 150,
+        durationMs: 1000,
+        stepIntervalMs: config.mirroring.motionStepIntervalMs,
       });
     });
   });
@@ -406,6 +419,33 @@ describe('MirroringService', () => {
 
       expect(() => service.getGridLayout()).toThrow(
         'Grid layout not available',
+      );
+    });
+  });
+
+  describe('getWindowInfo', () => {
+    it('returns window info after start', async () => {
+      const mock = createMockClient();
+      const service = new MirroringService(mock as unknown as MirroringClient);
+      await service.start();
+
+      const info = service.getWindowInfo();
+
+      expect(info).toEqual({
+        x: 100,
+        y: 200,
+        width: 400,
+        height: 800,
+        windowId: 42,
+      });
+    });
+
+    it('throws before start', () => {
+      const mock = createMockClient();
+      const service = new MirroringService(mock as unknown as MirroringClient);
+
+      expect(() => service.getWindowInfo()).toThrow(
+        'Window info not available',
       );
     });
   });

@@ -23,6 +23,7 @@ const SWIPE_SPEED = config.mirroring.swipeSpeed;
 const MAX_DIMENSION = config.mirroring.maxPxSingleDimension;
 const COMPRESS_PNG_PALETTE = config.mirroring.compressPngPalette;
 const PNG_COMPRESSION_LEVEL = config.mirroring.pngCompressionLevel;
+const MOTION_STEP_INTERVAL_MS = config.mirroring.motionStepIntervalMs;
 
 export interface ScreenInfo {
   width: number;
@@ -176,6 +177,7 @@ export class MirroringService extends Module {
       endY: end.y,
       durationMs: (duration ?? 500) / SWIPE_SPEED,
       easing: easing ?? SwipeEasing.Linear,
+      stepIntervalMs: MOTION_STEP_INTERVAL_MS,
     });
   }
 
@@ -183,14 +185,14 @@ export class MirroringService extends Module {
     x,
     y,
     direction = 'down',
-    distance = 150,
-    duration,
+    distance,
+    durationMs = 1000,
   }: {
     x: number;
     y: number;
     direction?: ScrollDirection;
     distance?: number;
-    duration?: number;
+    durationMs?: number;
   }): Promise<void> {
     const info = await this.refreshWindowInfo();
     const screen = this.toScreenCoords({ info, pixelX: x, pixelY: y });
@@ -198,13 +200,16 @@ export class MirroringService extends Module {
 
     const horizontal = direction === 'left' || direction === 'right';
     const negative = direction === 'up' || direction === 'left';
-    const directed = (negative ? -distance : distance) * sign;
+    const effectiveDistance =
+      distance ?? Math.round((horizontal ? info.width : info.height) / 2);
+    const directed = (negative ? -effectiveDistance : effectiveDistance) * sign;
 
     await this.client.postScroll({
       ...screen,
       deltaX: horizontal ? directed : 0,
       deltaY: horizontal ? 0 : directed,
-      durationMs: duration !== undefined ? Math.round(duration * 1000) : undefined,
+      durationMs,
+      stepIntervalMs: MOTION_STEP_INTERVAL_MS,
     });
   }
 
@@ -228,6 +233,15 @@ export class MirroringService extends Module {
       );
     }
     return this.gridLayout;
+  }
+
+  getWindowInfo(): WindowInfo {
+    if (!this.windowInfo) {
+      throw new Error(
+        'Window info not available — MirroringService has not started',
+      );
+    }
+    return this.windowInfo;
   }
 
   async getScreenInfo(): Promise<ScreenInfo> {

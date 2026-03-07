@@ -19,10 +19,15 @@ const toolError = (
   };
 };
 
-export const registerAutomationTools = (
-  server: McpServer,
-  mirroringService: MirroringService,
-): void => {
+export const registerAutomationTools = ({
+  server,
+  mirroringService,
+  screenSize,
+}: {
+  server: McpServer;
+  mirroringService: MirroringService;
+  screenSize: { width: number; height: number };
+}): void => {
   const actionContent = (
     text: string,
   ): Array<{ type: 'text'; text: string }> => {
@@ -167,13 +172,13 @@ export const registerAutomationTools = (
       description:
         'Scroll content at the given coordinates using trackpad-style scroll wheel events.\n\n' +
         'SCROLLING BEHAVIOR:\n' +
-        '- Scrolls in the given direction (default "down") by the given distance (default 150).\n' +
-        '- 150 ≈ 0.9 pages on most screens, keeping ~10% of the previous content visible for reading continuity.\n\n' +
+        '- Scrolls in the given direction (default "down") by the given distance.\n' +
+        `- Default distance is half the screen dimension in the scroll direction: ${Math.round(screenSize.height / 2)} for up/down, ${Math.round(screenSize.width / 2)} for left/right.\n\n` +
         'CALIBRATION:\n' +
         '- After EVERY scroll, take a screenshot and compare with the previous view.\n' +
         '- Correct calibration: ~10% of the old content is still visible at the edge of the scroll direction.\n' +
-        '- If the scroll moved too little (too much overlap): increase distance (e.g. 150 → 220).\n' +
-        '- If the scroll moved too much (content was skipped): decrease distance (e.g. 150 → 100).\n' +
+        '- If the scroll moved too little (too much overlap): increase distance.\n' +
+        '- If the scroll moved too much (content was skipped): decrease distance.\n' +
         '- Different apps scroll at different rates — recalibrate when switching apps.\n' +
         '- Once calibrated for an app, reuse that distance value for subsequent scrolls in the same context.\n\n' +
         'WHEN TO USE:\n' +
@@ -197,7 +202,7 @@ export const registerAutomationTools = (
           .positive()
           .optional()
           .describe(
-            'How far to scroll in scroll-wheel pixels (default: 150, which is ~0.9 pages on most screens). ' +
+            `How far to scroll in scroll-wheel pixels (default: ${Math.round(screenSize.height / 2)} for up/down, ${Math.round(screenSize.width / 2)} for left/right). ` +
               'Adjust based on visual feedback: increase if scrolling moves too little, decrease if too much.',
           ),
         duration: z
@@ -214,12 +219,18 @@ export const registerAutomationTools = (
     },
     async ({ x, y, direction, distance, duration, screenshotDelay }) => {
       try {
-        await mirroringService.scroll({ x, y, direction, distance, duration });
+        await mirroringService.scroll({
+          x,
+          y,
+          direction,
+          distance,
+          durationMs: duration ? Math.round(duration * 1000) : undefined,
+        });
         return withScreenshotAfter(
           mirroringService,
           screenshotDelay,
           actionContent(
-            `Scrolled ${direction ?? 'down'} by ${String(distance ?? 150)}px at (${x}, ${y})`,
+            `Scrolled ${direction ?? 'down'} by ${String(distance ?? 'default')}px at (${x}, ${y})`,
           ),
         );
       } catch (error: unknown) {

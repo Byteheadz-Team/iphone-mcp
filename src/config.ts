@@ -61,6 +61,12 @@ const config = {
       min: 0,
       max: 9,
     }),
+    motionStepIntervalMs: parseIntFromEnvVar({
+      envVar: 'IPHONE_MCP_MOTION_STEP_INTERVAL_MS',
+      fallback: 50,
+      min: 1,
+      max: 10_000,
+    }),
   },
 } as const;
 

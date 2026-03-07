@@ -205,7 +205,7 @@ This turns out to be one of the most impactful parts of the whole system. Withou
 | `yarn doctor`                                | Preflight check (macOS, permissions, device)                        |
 | `yarn screenshot`                            | Capture iPhone screen with grid overlay, save to `_screenshots/`    |
 | `yarn tap <x> <y>`                           | Tap at screenshot coordinates                                       |
-| `yarn scroll <x> <y> [direction] [distance]` | Scroll at a point (direction: up/down/left/right, distance: pixels) |
+| `yarn scroll <x> <y> [direction] [distance]` | Scroll at a point (direction: up/down/left/right, distance: pixels, default: half screen dimension) |
 | `yarn swipe <startX> <startY> <endX> <endY>` | Swipe between two points                                            |
 | `yarn test`                                  | Run all tests                                                       |
 | `yarn typecheck`                             | Type-check without emitting                                         |
@@ -225,6 +225,7 @@ Configuration is via environment variables (all prefixed with `IPHONE_MCP_`):
 | `IPHONE_MCP_PNG_PALETTE`             | `true`  | Enable palette-based PNG (256 colors) for smaller screenshots (`true`/`false`/`1`/`0`) |
 | `IPHONE_MCP_PNG_COMPRESSION_LEVEL`   | `6`     | PNG zlib compression level, 0-9 (higher = smaller file but slower)                     |
 | `IPHONE_MCP_MAX_PX_SINGLE_DIMENSION` | `1568`  | Max pixels for the longest screenshot dimension. Prevents oversized images for LLMs    |
+| `IPHONE_MCP_MOTION_STEP_INTERVAL_MS` | `50`    | Step interval (ms) for scroll and swipe/drag animations (min 1, max 10000)             |
 | `IPHONE_MCP_LAUNCH_TIMEOUT_MS`       | `10000` | How long to wait for iPhone Mirroring to launch (milliseconds)                         |
 
 ## Troubleshooting

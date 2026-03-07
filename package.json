@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "MCP server that controls a physical iPhone from macOS via iPhone Mirroring. Screenshot, tap, swipe, type — no Xcode or WebDriverAgent required.",
   "type": "module",
-  "packageManager": "yarn@4.12.0",
+  "packageManager": "yarn@4.13.0",
   "license": "MIT",
   "author": "Yev Spektor <code@yevspektor.com>",
   "homepage": "https://github.com/yev-yev-yev/iphone-mcp#readme",
@@ -56,14 +56,14 @@
     "prepublishOnly": "yarn build"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.26.0",
+    "@modelcontextprotocol/sdk": "^1.27.1",
     "sharp": "^0.34.5",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@stylistic/eslint-plugin": "^5.8.0",
+    "@stylistic/eslint-plugin": "^5.10.0",
     "@types/node": "^24.10.9",
-    "eslint": "^10.0.0",
+    "eslint": "^10.0.3",
     "eslint-plugin-import-x": "^4.16.1",
     "eslint-plugin-unicorn": "^63.0.0",
     "husky": "^9.1.7",
@@ -71,7 +71,7 @@
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.55.0",
+    "typescript-eslint": "^8.56.1",
     "vitest": "^4.0.18"
   }
 }
