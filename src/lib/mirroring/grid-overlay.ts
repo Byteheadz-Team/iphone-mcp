@@ -105,20 +105,51 @@ const buildGridSvg = ({
 export const overlayGrid = async ({
   imageBuffer,
   targetDivisions,
+  resizeWidth,
+  maxDimension,
   compressPngPalette,
   pngCompressionLevel,
 }: {
   imageBuffer: Buffer;
   targetDivisions: number;
+  resizeWidth?: number;
+  maxDimension?: number;
   compressPngPalette?: boolean;
   pngCompressionLevel?: number;
 }): Promise<Buffer> => {
   const metadata = await sharp(imageBuffer).metadata();
-  const width = metadata.width ?? 0;
-  const height = metadata.height ?? 0;
+  const origW = metadata.width ?? 0;
+  const origH = metadata.height ?? 0;
 
-  if (width === 0 || height === 0) {
+  if (origW === 0 || origH === 0) {
     return imageBuffer;
+  }
+
+  // Determine post-resize dimensions for grid layout computation.
+  const needsResize = resizeWidth !== undefined && resizeWidth !== origW;
+  const width = needsResize ? resizeWidth : origW;
+  const height = needsResize
+    ? Math.round(origH * (resizeWidth / origW))
+    : origH;
+
+  // When resizing, decode to raw pixels so the composite input doesn't
+  // require an intermediate PNG encode/decode round-trip.
+  let compositeImageInput: sharp.OverlayOptions['input'];
+  let compositeImageRaw: sharp.OverlayOptions['raw'];
+  if (needsResize) {
+    const { data, info } = await sharp(imageBuffer)
+      .resize({ width: resizeWidth })
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    compositeImageInput = data;
+    compositeImageRaw = {
+      width: info.width,
+      height: info.height,
+      channels: info.channels as 1 | 2 | 3 | 4,
+    };
+  } else {
+    compositeImageInput = imageBuffer;
   }
 
   const layout = computeGridLayout({
@@ -130,18 +161,28 @@ export const overlayGrid = async ({
 
   const svg = buildGridSvg({ totalWidth, totalHeight, layout });
 
-  return sharp({
+  let pipeline = sharp({
     create: {
       width: totalWidth,
       height: totalHeight,
       channels: 4,
       background: { r: 30, g: 30, b: 30, alpha: 255 },
     },
-  })
-    .composite([
-      { input: imageBuffer, top: layout.padding, left: layout.padding },
-      { input: Buffer.from(svg), top: 0, left: 0 },
-    ])
+  }).composite([
+    {
+      input: compositeImageInput,
+      ...(compositeImageRaw ? { raw: compositeImageRaw } : {}),
+      top: layout.padding,
+      left: layout.padding,
+    },
+    { input: Buffer.from(svg), top: 0, left: 0 },
+  ]);
+
+  if (maxDimension && Math.max(totalWidth, totalHeight) > maxDimension) {
+    pipeline = pipeline.resize(maxDimension, maxDimension, { fit: 'inside' });
+  }
+
+  return pipeline
     .png({
       compressionLevel: pngCompressionLevel,
       ...(compressPngPalette ? { palette: true } : {}),

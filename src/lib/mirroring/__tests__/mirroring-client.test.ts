@@ -105,7 +105,7 @@ describe('MirroringClient', () => {
   });
 
   describe('captureWindow', () => {
-    it('captures window and downscales to target width', async () => {
+    it('captures window without spawning sips', async () => {
       const fakeImage = Buffer.from('fake-png');
       const mock = execFileCb as unknown as ExecFileMock;
       mock.mockImplementation((...args: unknown[]) => {
@@ -125,16 +125,16 @@ describe('MirroringClient', () => {
       });
 
       expect(result).toEqual(fakeImage);
-      // First call: screencapture
+      // Only call: screencapture (no sips)
+      expect(mock).toHaveBeenCalledTimes(1);
       expect(mock).toHaveBeenCalledWith(
         'screencapture',
         expect.arrayContaining(['-l', '42']),
         expect.any(Function),
       );
-      // Second call: sips downscale
-      expect(mock).toHaveBeenCalledWith(
+      expect(mock).not.toHaveBeenCalledWith(
         'sips',
-        expect.arrayContaining(['--resampleWidth', '400']),
+        expect.anything(),
         expect.any(Function),
       );
       expect(unlinkMock).toHaveBeenCalled();

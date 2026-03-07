@@ -129,6 +129,7 @@ describe('MirroringService', () => {
       expect(mock.captureWindow).toHaveBeenCalledWith({
         windowId: 42,
         targetWidth: 400 * SCALE,
+        maxDimension: config.mirroring.maxPxSingleDimension,
         gridDivisions: config.mirroring.overlayGridDivisions,
         compressPngPalette: config.mirroring.compressPngPalette,
         pngCompressionLevel: config.mirroring.pngCompressionLevel,

@@ -160,12 +160,14 @@ JSON.stringify({ x, y, width, height, windowId });
   async captureWindow({
     windowId,
     targetWidth,
+    maxDimension,
     gridDivisions,
     compressPngPalette,
     pngCompressionLevel,
   }: {
     windowId: number;
     targetWidth?: number;
+    maxDimension?: number;
     gridDivisions?: number;
     compressPngPalette?: boolean;
     pngCompressionLevel?: number;
@@ -183,24 +185,16 @@ JSON.stringify({ x, y, width, height, windowId });
         tmpPath,
       ]);
 
-      // Resample to the caller's target width (e.g. 2x for Retina screenshots).
-      if (targetWidth) {
-        await execFile('sips', [
-          '--resampleWidth',
-          String(targetWidth),
-          tmpPath,
-          '--out',
-          tmpPath,
-        ]);
-      }
-
       const buffer = await readFile(tmpPath);
 
-      // Overlay grid lines and labels for coordinate reference.
+      // overlayGrid handles resize, grid composite, and dimension clamping
+      // in a single sharp pipeline (one PNG encode).
       if (gridDivisions) {
         return overlayGrid({
           imageBuffer: buffer,
           targetDivisions: gridDivisions,
+          resizeWidth: targetWidth,
+          maxDimension,
           compressPngPalette,
           pngCompressionLevel,
         });
