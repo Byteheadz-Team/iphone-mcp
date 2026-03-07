@@ -161,7 +161,12 @@ export const overlayGrid = async ({
 
   const svg = buildGridSvg({ totalWidth, totalHeight, layout });
 
-  let pipeline = sharp({
+  const pngOpts: sharp.PngOptions = {
+    compressionLevel: pngCompressionLevel,
+    ...(compressPngPalette ? { palette: true } : {}),
+  };
+
+  const composited = sharp({
     create: {
       width: totalWidth,
       height: totalHeight,
@@ -178,16 +183,31 @@ export const overlayGrid = async ({
     { input: Buffer.from(svg), top: 0, left: 0 },
   ]);
 
-  if (maxDimension && Math.max(totalWidth, totalHeight) > maxDimension) {
-    pipeline = pipeline.resize(maxDimension, maxDimension, { fit: 'inside' });
+  const needsClamp =
+    maxDimension !== undefined &&
+    Math.max(totalWidth, totalHeight) > maxDimension;
+
+  // Sharp applies resize before composite internally, so when clamping is
+  // needed we must composite first (via raw pixels) and then resize in a
+  // second pipeline step. This still produces only one final PNG encode.
+  if (needsClamp) {
+    const { data, info } = await composited
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+
+    return sharp(data, {
+      raw: {
+        width: info.width,
+        height: info.height,
+        channels: info.channels as 1 | 2 | 3 | 4,
+      },
+    })
+      .resize(maxDimension, maxDimension, { fit: 'inside' })
+      .png(pngOpts)
+      .toBuffer();
   }
 
-  return pipeline
-    .png({
-      compressionLevel: pngCompressionLevel,
-      ...(compressPngPalette ? { palette: true } : {}),
-    })
-    .toBuffer();
+  return composited.png(pngOpts).toBuffer();
 };
 
 export const buildGridInstructions = (layout: GridLayout): string => {

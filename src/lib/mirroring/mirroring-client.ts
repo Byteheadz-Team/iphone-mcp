@@ -188,7 +188,9 @@ JSON.stringify({ x, y, width, height, windowId });
       const buffer = await readFile(tmpPath);
 
       // overlayGrid handles resize, grid composite, and dimension clamping
-      // in a single sharp pipeline (one PNG encode).
+      // in a single sharp pipeline (one PNG encode). Note: targetWidth and
+      // maxDimension only apply when gridDivisions is set (the only caller
+      // always passes gridDivisions).
       if (gridDivisions) {
         return overlayGrid({
           imageBuffer: buffer,

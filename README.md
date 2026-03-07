@@ -27,14 +27,14 @@ That's it. Ask Claude to "take a screenshot of my iPhone" to verify it works.
 
 ```
 MCP Client  ──stdio──>  iphone-mcp  ──>  iPhone Mirroring window
-                                              ├── screencapture + sips (PNG screenshot, 1x default)
+                                              ├── screencapture + sharp (PNG screenshot, 1x default)
                                               ├── CGEvent injection (clicks, drags, scroll wheel)
                                               └── AppleScript keystroke (text input)
 ```
 
 **iPhone Mirroring** is a macOS Sequoia app that mirrors your iPhone's screen to a macOS window. This server programmatically interacts with that window:
 
-- **Screenshots** via `screencapture` + `sips` -- captures the mirroring window as PNG, resampled to the configured scale (default 1x)
+- **Screenshots** via `screencapture` + `sharp` -- captures the mirroring window as PNG, resized, grid-overlaid, and dimension-clamped in a single `sharp` pipeline
 - **Taps & swipes** via `CGEvent` (JXA/osascript) -- injects mouse events at the right screen coordinates
 - **Scrolling** via `CGEventCreateScrollWheelEvent` -- trackpad-style scroll wheel events for smooth content scrolling (auto-corrected for the macOS "Natural scrolling" preference)
 - **Text input** via AppleScript `keystroke` -- types into whatever field is focused
@@ -220,7 +220,7 @@ Configuration is via environment variables (all prefixed with `IPHONE_MCP_`):
 | Variable                             | Default | Description                                                                            |
 | ------------------------------------ | ------- | -------------------------------------------------------------------------------------- |
 | `IPHONE_MCP_LOG_LEVEL`               | `info`  | Log level (`debug`, `info`, `warn`, `error`, `silent`)                                 |
-| `IPHONE_MCP_SCREENSHOT_SCALE`        | `1.5`   | Screenshot resolution multiplier. Higher values increase detail and token usage        |
+| `IPHONE_MCP_SCREENSHOT_SCALE`        | `1`     | Screenshot resolution multiplier. Higher values increase detail and token usage        |
 | `IPHONE_MCP_GRID_DIVISIONS`          | `9`     | Number of grid divisions on the coordinate overlay. More divisions = finer precision   |
 | `IPHONE_MCP_PNG_PALETTE`             | `true`  | Enable palette-based PNG (256 colors) for smaller screenshots (`true`/`false`/`1`/`0`) |
 | `IPHONE_MCP_PNG_COMPRESSION_LEVEL`   | `6`     | PNG zlib compression level, 0-9 (higher = smaller file but slower)                     |
