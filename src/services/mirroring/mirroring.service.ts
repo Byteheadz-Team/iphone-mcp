@@ -124,6 +124,28 @@ export class MirroringService extends Module {
     await this.client.postClick({ ...screen, numTaps });
   }
 
+  async pokemonSearch(query: string): Promise<void> {
+    if (!query || query.length > 100 || !/^[\x20-\x7e]+$/.test(query)) {
+      throw new Error(
+        'Pokémon GO search query must be 1-100 printable ASCII characters.',
+      );
+    }
+
+    const info = await this.refreshWindowInfo();
+    const offset = this.getGridLayout().padding;
+
+    // Pokémon GO's Pokémon-storage search field is centered near the top of
+    // the mirrored iPhone screen. Keep this helper deliberately app-specific
+    // instead of exposing arbitrary text entry through MCP.
+    const pixelX = offset + (info.width * SCALE) / 2;
+    const pixelY = offset + info.height * SCALE * 0.175;
+    const screen = this.toScreenCoords({ info, pixelX, pixelY });
+
+    await this.client.postClick(screen);
+    await this.client.sendShortcut('a');
+    await this.client.typeText(query);
+  }
+
   async swipe({
     startX,
     startY,
