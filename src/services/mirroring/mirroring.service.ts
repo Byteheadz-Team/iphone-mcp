@@ -1,5 +1,3 @@
-import { execFile as execFileCb } from 'node:child_process';
-
 import { z } from 'zod';
 
 import {
@@ -8,12 +6,10 @@ import {
   type WindowInfo,
   computeGridLayout,
 } from '@lib/mirroring';
-import { Module, execFile } from '@lib/utils';
+import { Module } from '@lib/utils';
 import config from '~/config';
 
-import { type ButtonName, SwipeEasing } from './mirroring.types';
-
-export type ScrollDirection = 'up' | 'down' | 'left' | 'right';
+import { SwipeEasing } from './mirroring.types';
 
 const coordinateSchema = z.number().finite();
 
@@ -36,7 +32,6 @@ export class MirroringService extends Module {
   private client: MirroringClient;
   private windowInfo: WindowInfo | null = null;
   private gridLayout: GridLayout | null = null;
-  private naturalScrolling = true;
   readonly permissionWarnings = {
     accessibility: null as string | null,
     screenRecording: null as string | null,
@@ -56,7 +51,7 @@ export class MirroringService extends Module {
     if (!hasAccessibility) {
       this.permissionWarnings.accessibility =
         `Accessibility permission is not granted for ${appName}. ` +
-        'Tap, swipe, and type actions may not work. ' +
+        'Tap and swipe actions may not work. ' +
         'Enable it in System Settings > Privacy & Security > Accessibility.';
       this.log.warn(this.permissionWarnings.accessibility);
     }
@@ -68,9 +63,6 @@ export class MirroringService extends Module {
         'Enable it in System Settings > Privacy & Security > Screen Recording.';
       this.log.warn(this.permissionWarnings.screenRecording);
     }
-
-    this.naturalScrolling = await this.client.isNaturalScrolling();
-    this.log.info(`Natural scrolling: ${this.naturalScrolling ? 'ON' : 'OFF'}`);
 
     try {
       await this.client.ensureRunning();
@@ -132,18 +124,26 @@ export class MirroringService extends Module {
     await this.client.postClick({ ...screen, numTaps });
   }
 
-  async longPress({
-    x,
-    y,
-    durationMs,
-  }: {
-    x: number;
-    y: number;
-    durationMs: number;
-  }): Promise<void> {
+  async pokemonSearch(query: string): Promise<void> {
+    if (!query || query.length > 100 || !/^[\x20-\x7e]+$/.test(query)) {
+      throw new Error(
+        'Pokémon GO search query must be 1-100 printable ASCII characters.',
+      );
+    }
+
     const info = await this.refreshWindowInfo();
-    const screen = this.toScreenCoords({ info, pixelX: x, pixelY: y });
-    await this.client.postLongPress({ ...screen, durationMs });
+    const offset = this.getGridLayout().padding;
+
+    // Pokémon GO's Pokémon-storage search field is centered near the top of
+    // the mirrored iPhone screen. Keep this helper deliberately app-specific
+    // instead of exposing arbitrary text entry through MCP.
+    const pixelX = offset + (info.width * SCALE) / 2;
+    const pixelY = offset + info.height * SCALE * 0.175;
+    const screen = this.toScreenCoords({ info, pixelX, pixelY });
+
+    await this.client.postClick(screen);
+    await this.client.sendShortcut('a');
+    await this.client.typeText(query);
   }
 
   async swipe({
@@ -175,51 +175,6 @@ export class MirroringService extends Module {
     });
   }
 
-  async scroll({
-    x,
-    y,
-    direction = 'down',
-    distance,
-    durationMs = 1000,
-  }: {
-    x: number;
-    y: number;
-    direction?: ScrollDirection;
-    distance?: number;
-    durationMs?: number;
-  }): Promise<void> {
-    const info = await this.refreshWindowInfo();
-    const screen = this.toScreenCoords({ info, pixelX: x, pixelY: y });
-    const sign = this.naturalScrolling ? -1 : 1;
-
-    const horizontal = direction === 'left' || direction === 'right';
-    const negative = direction === 'up' || direction === 'left';
-    const effectiveDistance =
-      distance ?? Math.round((horizontal ? info.width : info.height) / 2);
-    const directed = (negative ? -effectiveDistance : effectiveDistance) * sign;
-
-    await this.client.postScroll({
-      ...screen,
-      deltaX: horizontal ? directed : 0,
-      deltaY: horizontal ? 0 : directed,
-      durationMs,
-      stepIntervalMs: MOTION_STEP_INTERVAL_MS,
-    });
-  }
-
-  async typeText(text: string): Promise<void> {
-    await this.client.typeText(text);
-  }
-
-  async pressButton(button: ButtonName): Promise<void> {
-    const shortcuts: Record<ButtonName, string> = {
-      home: '1', // ⌘1
-      app_switcher: '2', // ⌘2
-      spotlight: '3', // ⌘3
-    };
-    await this.client.sendShortcut(shortcuts[button]);
-  }
-
   getGridLayout(): GridLayout {
     if (!this.gridLayout) {
       throw new Error(
@@ -248,25 +203,6 @@ export class MirroringService extends Module {
     };
   }
 
-  async getClipboard(): Promise<string> {
-    const { stdout } = await execFile('pbpaste');
-    return stdout;
-  }
-
-  async setClipboard(content: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const proc = execFileCb('pbcopy', (err) => {
-        if (err) {
-          reject(new Error(`pbcopy failed: ${err.message}`));
-        } else {
-          resolve();
-        }
-      });
-      proc.stdin?.write(content);
-      proc.stdin?.end();
-    });
-  }
-
   private async refreshWindowInfo(): Promise<WindowInfo> {
     await this.ensureReady();
     this.windowInfo = await this.client.getWindowInfo();
@@ -291,6 +227,18 @@ export class MirroringService extends Module {
     coordinateSchema.parse(pixelY);
 
     const offset = this.getGridLayout().padding;
+    const minX = offset;
+    const minY = offset;
+    const maxX = offset + info.width * SCALE;
+    const maxY = offset + info.height * SCALE;
+
+    if (pixelX < minX || pixelX > maxX || pixelY < minY || pixelY > maxY) {
+      throw new Error(
+        `Coordinate (${pixelX}, ${pixelY}) is outside the mirrored iPhone screen. ` +
+          `Allowed screenshot bounds are x=${minX}..${maxX}, y=${minY}..${maxY}.`,
+      );
+    }
+
     return {
       x: info.x + (pixelX - offset) / SCALE,
       y: info.y + (pixelY - offset) / SCALE,
